@@ -12,11 +12,11 @@
  消息节流模式
 
  - MTModePerformFirstly: 执行最靠前发送的消息，后面发送的消息会被忽略
- - MTModePerformLastly: 执行最靠后发送的消息，前面发送的消息会被忽略
+ - MTModePerformLastly: 执行最靠后发送的消息，前面发送的消息会被忽略，执行时间会有延时
  */
 typedef NS_ENUM(NSUInteger, MTMode) {
     MTModePerformFirstly,
-    MTModePerformLastly,
+    MTModePerformLast,
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, getter=isClassMethod) BOOL classMethod;
 /**
- 消息节流时间的阈值
+ 消息节流时间的阈值，单位：秒
  */
 @property (nonatomic) NSTimeInterval durationThreshold;
 

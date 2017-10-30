@@ -110,7 +110,7 @@ void MTHandleInvocation(NSInvocation *invocation, SEL fixedSelector)
                 [invocation invoke];
             }
             break;
-        case MTModePerformLastly:
+        case MTModePerformLast:
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
                 rule.lastTimeRequest = now;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{

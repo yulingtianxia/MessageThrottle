@@ -23,7 +23,7 @@
     rule.selector = @selector(foo:);
     rule.classMethod = YES;
     rule.durationThreshold = 0.1;
-    rule.mode = MTModePerformLastly;
+    rule.mode = MTModePerformLast;
     rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
     [MTEngine.defaultEngine updateRule:rule];

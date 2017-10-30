@@ -2,8 +2,6 @@
 
 MessageThrottle is a tool helps you control Objective-C message's forwarding frequency.
 
-## Articles
-
 ## Usage
 
 The following example shows how to restrict the frequency of forwarding `- [ViewController foo:]` message to 10 times per second.
@@ -16,7 +14,31 @@ rule.durationThreshold = 0.1;
 [MTEngine.defaultEngine updateRule:rule];
 ```
 
-`MTRule` represents the rule of the message throttle, which contains message's infomation and frequency. If you want to restrict a class method, just set value of `classMethod` property to `YES`. `MTRule` also define the mode of performing selector. There is two modes in `MTMode`: MTModePerformFirstly and MTModePerformLastly.
+`MTRule` represents the rule of a message throttle, which contains message's infomation and frequency. If you want to restrict a class method, just set value of `classMethod` property to `YES`. `MTRule` also define the mode of performing selector. There are two modes in `MTMode`: `MTModePerformFirstly` and `MTModePerformLast`. 
+
+The default mode is `MTModePerformFirstly`. `MTModePerformFirstly` will performs the first message and ignore all following messages during `durationThreshold`.
+
+```
+MTModePerformFirstly:
+start                                                                end
+|                           durationThreshold                          |
+@-------------------------@----------@---------------@---------------->>
+|                         |          |               |          
+perform immediately       ignore     ignore          ignore     
+```
+
+`MTModePerformLastly` performs the last message at end time. Please note that does not perform message immediately, the delay time could be `durationThreshold` at most. When using `MTModePerformLastly`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default.
+
+```
+MTModePerformLast:
+start                                                                end
+|                           durationThreshold                          |
+@-------------------------@----------@---------------@---------------->>
+|                         |          |               |          
+ignore                    ignore     ignore          perform at end
+```
+
+`MTEngine` is a singleton class. It manages all rules of message throttles. `updateRule:` method will cover the old rule of the same message.
 
 ## Installation
 
@@ -84,5 +106,5 @@ yulingtianxia, yulingtianxia@gmail.com
 
 ## License
 
-TBActionSheet is available under the MIT license. See the LICENSE file for more info.
+MessageThrottle is available under the MIT license. See the LICENSE file for more info.
 
