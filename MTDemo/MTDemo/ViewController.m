@@ -20,32 +20,32 @@
     // Do any additional setup after loading the view, typically from a nib.
     MTRule *rule = [MTRule new];
     rule.cls = self.class;
-    rule.selector = @selector(test:);
+    rule.selector = @selector(foo:);
     rule.classMethod = YES;
-    rule.durationThreshold = 0;
-    rule.mode = MTModePerformFirstly;
+    rule.durationThreshold = 0.1;
+    rule.mode = MTModePerformLastly;
     rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
     [MTEngine.defaultEngine updateRule:rule];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (YES) {
-            SEL selector = NSSelectorFromString(@"sel1");
+            SEL selector = NSSelectorFromString(@"bar1");
             @autoreleasepool {
-                [ViewController test:selector];
+                [ViewController foo:selector];
             }
         }
     });
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (YES) {
-            SEL selector = NSSelectorFromString(@"sel2");
+            SEL selector = NSSelectorFromString(@"bar2");
             @autoreleasepool {
-                [ViewController test:selector];
+                [ViewController foo:selector];
             }
         }
     });
 }
 
-+ (void)test:(SEL)arg {
++ (void)foo:(SEL)arg {
     NSLog(@"%@", NSStringFromSelector(arg));
 }
 

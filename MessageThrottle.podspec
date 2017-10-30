@@ -3,7 +3,7 @@ s.name         = "MessageThrottle"
 s.version      = "1.0.0"
 s.summary      = "A lightweight message throttle."
 s.description  = <<-DESC
-
+MessageThrottle is a tool helps you control Objective-C message's forwarding frequency.
 DESC
 s.homepage     = "https://github.com/yulingtianxia/MessageThrottle"
 
