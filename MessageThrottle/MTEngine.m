@@ -106,7 +106,7 @@ void MTHandleInvocation(NSInvocation *invocation, SEL fixedSelector)
         case MTModePerformFirstly:
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
                 rule.lastTimeRequest = now;
-                [invocation setSelector:fixedSelector];
+                invocation.selector = fixedSelector;
                 [invocation invoke];
             }
             break;
@@ -118,12 +118,22 @@ void MTHandleInvocation(NSInvocation *invocation, SEL fixedSelector)
                 });
             }
             else {
-                [invocation setSelector:fixedSelector];
+                invocation.selector = fixedSelector;
                 rule.lastInvocation = invocation;
                 [rule.lastInvocation retainArguments];
             }
             break;
-        default:
+        case MTModePerformDebounce:
+            rule.lastTimeRequest = now;
+            invocation.selector = fixedSelector;
+            rule.lastInvocation = invocation;
+            [rule.lastInvocation retainArguments];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
+                NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+                if (now - rule.lastTimeRequest > rule.durationThreshold && rule.lastInvocation == invocation) {
+                    [rule.lastInvocation invoke];
+                }
+            });
             break;
     }
     

@@ -13,10 +13,12 @@
 
  - MTModePerformFirstly: 执行最靠前发送的消息，后面发送的消息会被忽略
  - MTModePerformLastly: 执行最靠后发送的消息，前面发送的消息会被忽略，执行时间会有延时
+ - MTModePerformDebounce: 消息发送后延迟一段时间执行，如果在这段时间内继续发送消息，则重新计时
  */
 typedef NS_ENUM(NSUInteger, MTMode) {
     MTModePerformFirstly,
     MTModePerformLast,
+    MTModePerformDebounce,
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -43,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) MTMode mode;
 
 /**
- MTModePerformLastly 模式下消息发送的队列，默认在主队列
+ MTModePerformLastly 和 MTModePerformDebounce 模式下消息发送的队列，默认在主队列
  */
 @property (nonatomic) dispatch_queue_t messageQueue;
 

@@ -14,7 +14,7 @@ rule.durationThreshold = 0.1;
 [MTEngine.defaultEngine updateRule:rule];
 ```
 
-`MTRule` represents the rule of a message throttle, which contains message's infomation and frequency. If you want to restrict a class method, just set value of `classMethod` property to `YES`. `MTRule` also define the mode of performing selector. There are two modes in `MTMode`: `MTModePerformFirstly` and `MTModePerformLast`. 
+`MTRule` represents the rule of a message throttle, which contains message's infomation and frequency. If you want to restrict a class method, just set value of `classMethod` property to `YES`. `MTRule` also define the mode of performing selector. There are three modes in `MTMode`: `MTModePerformFirstly`, `MTModePerformLast` and `MTModePerformDebounce`. 
 
 The default mode is `MTModePerformFirstly`. `MTModePerformFirstly` will performs the first message and ignore all following messages during `durationThreshold`.
 
@@ -27,7 +27,7 @@ start                                                                end
 perform immediately       ignore     ignore          ignore     
 ```
 
-`MTModePerformLastly` performs the last message at end time. Please note that does not perform message immediately, the delay time could be `durationThreshold` at most. When using `MTModePerformLastly`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default.
+`MTModePerformLastly` performs the last message at end time. Please note that does not perform message immediately, the delay time could be `durationThreshold` at most. 
 
 ```
 MTModePerformLast:
@@ -37,6 +37,22 @@ start                                                                end
 |                         |          |               |          
 ignore                    ignore     ignore          perform at end
 ```
+
+`MTModePerformDebounce` restart timer when another message arrives during `durationThreshold`. So there must be a delay of `durationThreshold` before performing message. 
+
+```
+MTModePerformDebounce:
+start                                  end
+|           durationThreshold(old)       |
+@-------------------@------------------->>
+|                   |                 
+ignore              perform at end of new duration
+                    |--------------------------------------->>
+                    |           durationThreshold(new)       |
+                    start                                  end
+```
+
+When using `MTModePerformLastly` or `MTModePerformDebounce`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default.
 
 `MTEngine` is a singleton class. It manages all rules of message throttles. `updateRule:` method will cover the old rule of the same message.
 

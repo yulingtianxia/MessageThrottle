@@ -22,8 +22,8 @@
     rule.cls = self.class;
     rule.selector = @selector(foo:);
     rule.classMethod = YES;
-    rule.durationThreshold = 0.1;
-    rule.mode = MTModePerformLast;
+    rule.durationThreshold = 2;
+    rule.mode = MTModePerformDebounce;
     rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
     [MTEngine.defaultEngine updateRule:rule];
@@ -31,22 +31,31 @@
         while (YES) {
             SEL selector = NSSelectorFromString(@"bar1");
             @autoreleasepool {
-                [ViewController foo:selector];
+//                [ViewController foo:selector];
             }
         }
     });
+    __block NSTimeInterval lastTime;
+    __block NSTimeInterval value = 1;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (YES) {
-            SEL selector = NSSelectorFromString(@"bar2");
+//            SEL selector = NSSelectorFromString(@"bar2");
             @autoreleasepool {
-                [ViewController foo:selector];
+                NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+                
+                if (now - lastTime > value) {
+                    lastTime = now;
+                    value += 0.1;
+                    NSLog(@"message send value:%f", value);
+                    [ViewController foo:[NSDate date]];
+                }
             }
         }
     });
 }
 
-+ (void)foo:(SEL)arg {
-    NSLog(@"%@", NSStringFromSelector(arg));
++ (void)foo:(NSDate *)arg {
+    NSLog(@"foo: %@", arg);
 }
 
 - (void)didReceiveMemoryWarning {
