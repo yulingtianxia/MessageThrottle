@@ -27,7 +27,7 @@ start                                                                end
 perform immediately       ignore     ignore          ignore     
 ```
 
-`MTModePerformLastly` performs the last message at end time. Please note that does not perform message immediately, the delay time could be `durationThreshold` at most. 
+`MTModePerformLastly` performs the last message at end time. Please note that does not perform message immediately, the delay could be `durationThreshold` at most. 
 
 ```
 MTModePerformLast:
@@ -35,21 +35,21 @@ start                                                                end
 |                           durationThreshold                          |
 @-------------------------@----------@---------------@---------------->>
 |                         |          |               |          
-ignore                    ignore     ignore          perform at end
+ignore                    ignore     ignore          will perform at end
 ```
 
-`MTModePerformDebounce` restart timer when another message arrives during `durationThreshold`. So there must be a delay of `durationThreshold` before performing message. 
+`MTModePerformDebounce` will restart timer when another message arrives during `durationThreshold`. So there must be a delay of `durationThreshold` at least. 
 
 ```
 MTModePerformDebounce:
-start                                  end
-|           durationThreshold(old)       |
-@-------------------@------------------->>
-|                   |                 
-ignore              perform at end of new duration
-                    |--------------------------------------->>
-                    |           durationThreshold(new)       |
-                    start                                  end
+start                                        end
+|           durationThreshold(old)             |
+@----------------------@---------------------->>
+|                      |                 
+ignore                 will perform at end of new duration
+                       |--------------------------------------------->>
+                       |           durationThreshold(new)             |
+                       start                                        end
 ```
 
 When using `MTModePerformLastly` or `MTModePerformDebounce`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default.
