@@ -19,18 +19,17 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     MTRule *rule = [MTRule new];
-    rule.cls = self.class;
+    rule.target = mt_metaClass(self.class);
     rule.selector = @selector(foo:);
-    rule.classMethod = YES;
     rule.durationThreshold = 2;
-    rule.mode = MTModePerformDebounce;
+    rule.mode = MTPerformModeDebounce;
     rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
     [MTEngine.defaultEngine updateRule:rule];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (YES) {
-            SEL selector = NSSelectorFromString(@"bar1");
+//            SEL selector = NSSelectorFromString(@"bar1");
             @autoreleasepool {
 //                [ViewController foo:selector];
             }

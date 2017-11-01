@@ -10,6 +10,14 @@
 #import <objc/runtime.h>
 #import <objc/message.h>
 
+Class mt_metaClass(Class cls)
+{
+    if (class_isMetaClass(cls)) {
+        return cls;
+    }
+    return object_getClass(cls);
+}
+
 @interface MTRule ()
 
 @property (nonatomic) NSTimeInterval lastTimeRequest;
@@ -23,8 +31,7 @@
 {
     self = [super init];
     if (self) {
-        _classMethod = NO;
-        _mode = MTModePerformFirstly;
+        _mode = MTPerformModeFirstly;
         _lastTimeRequest = 0;
         _messageQueue = dispatch_get_main_queue();
     }
@@ -65,15 +72,15 @@ static NSObject *_nilObj;
 
 - (void)updateRule:(MTRule *)rule
 {
-    self.rules[mt_methodDescription(rule.cls, rule.selector)] = rule;
-    mt_overrideMethod(rule.cls, rule.selector, rule.isClassMethod);
+    self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
+    mt_overrideMethod(rule.target, rule.selector);
 }
 
 #pragma mark - Private Helper
 
 static NSString * mt_methodDescription(Class cls, SEL selector)
 {
-    return [NSString stringWithFormat:@"[%@ %@]", NSStringFromClass(cls), NSStringFromSelector(selector)];
+    return [NSString stringWithFormat:@"%@ [%@ %@]", class_isMetaClass(cls) ? @"+" : @"-", NSStringFromClass(cls), NSStringFromSelector(selector)];
 }
 
 static SEL mt_aliasForSelector(Class cls, SEL selector)
@@ -103,14 +110,14 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
     NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
 
     switch (rule.mode) {
-        case MTModePerformFirstly:
+        case MTPerformModeFirstly:
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
                 rule.lastTimeRequest = now;
                 invocation.selector = fixedSelector;
                 [invocation invoke];
             }
             break;
-        case MTModePerformLast:
+        case MTPerformModeLast:
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
                 rule.lastTimeRequest = now;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
@@ -123,7 +130,7 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
                 [rule.lastInvocation retainArguments];
             }
             break;
-        case MTModePerformDebounce:
+        case MTPerformModeDebounce:
             rule.lastTimeRequest = now;
             invocation.selector = fixedSelector;
             rule.lastInvocation = invocation;
@@ -150,11 +157,16 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
     mt_handleInvocation(invocation, fixedOriginalSelector);
 }
 
-static void mt_overrideMethod(Class cls, SEL selector, BOOL isClassMethod)
+static void mt_overrideMethod(id target, SEL selector)
 {
-    if (isClassMethod) {
-        cls = object_getClass(cls);
+    Class cls;
+    if (object_isClass(target)) {
+        cls = target;
     }
+    else {
+        cls = object_getClass(target);
+    }
+    // TODO: hook instance
     
     Method originMethod = class_getInstanceMethod(cls, selector);
     if (!originMethod) {
