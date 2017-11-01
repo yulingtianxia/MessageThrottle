@@ -1,6 +1,6 @@
 # MessageThrottle
 
-MessageThrottle is a tool helps you control Objective-C message's forwarding frequency.
+MessageThrottle is a lightweight library helps you control Objective-C message's forwarding frequency. It's an implementation of function throttle/debounce developed with Objective-C runtime.
 
 ## Usage
 
@@ -27,7 +27,7 @@ start                                                                end
 perform immediately       ignore     ignore          ignore     
 ```
 
-`MTModePerformLastly` performs the last message at end time. Please note that does not perform message immediately, the delay could be `durationThreshold` at most. 
+`MTModePerformLast` performs the last message at end time. Please note that does not perform message immediately, the delay could be `durationThreshold` at most. 
 
 ```
 MTModePerformLast:
@@ -52,7 +52,7 @@ ignore                 will perform at end of new duration
                        start                                        end
 ```
 
-When using `MTModePerformLastly` or `MTModePerformDebounce`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default.
+When using `MTModePerformLast` or `MTModePerformDebounce`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default. `MTModePerformLast` and `MTModePerformDebounce` modes will also use the last arguments to perform messages.
 
 `MTEngine` is a singleton class. It manages all rules of message throttles. `updateRule:` method will cover the old rule of the same message.
 

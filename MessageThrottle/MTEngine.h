@@ -28,12 +28,21 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MTRule : NSObject
 
+/**
+ Class
+ */
 @property (nonatomic) Class cls;
+
+/**
+ 节流消息的 SEL
+ */
 @property (nonatomic) SEL selector;
+
 /**
  是否是类方法
  */
 @property (nonatomic, getter=isClassMethod) BOOL classMethod;
+
 /**
  消息节流时间的阈值，单位：秒
  */
@@ -54,6 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MTEngine : NSObject
 
 @property (nonatomic, class, readonly) MTEngine *defaultEngine;
+
 - (void)updateRule:(MTRule *)rule;
 
 @end
