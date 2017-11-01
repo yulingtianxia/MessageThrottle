@@ -27,6 +27,7 @@
     rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
     [MTEngine.defaultEngine updateRule:rule];
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (YES) {
             SEL selector = NSSelectorFromString(@"bar1");

@@ -65,18 +65,18 @@ static NSObject *_nilObj;
 
 - (void)updateRule:(MTRule *)rule
 {
-    self.rules[MTMethodDescription(rule.cls, rule.selector)] = rule;
-    MTOverrideMethod(rule.cls, rule.selector, rule.isClassMethod);
+    self.rules[mt_methodDescription(rule.cls, rule.selector)] = rule;
+    mt_overrideMethod(rule.cls, rule.selector, rule.isClassMethod);
 }
 
-#pragma mark - Private Func
+#pragma mark - Private Helper
 
-NSString * MTMethodDescription(Class cls, SEL selector)
+static NSString * mt_methodDescription(Class cls, SEL selector)
 {
     return [NSString stringWithFormat:@"[%@ %@]", NSStringFromClass(cls), NSStringFromSelector(selector)];
 }
 
-SEL MTFixSelector(Class cls, SEL selector)
+static SEL mt_aliasForSelector(Class cls, SEL selector)
 {
     NSString *fixedOriginalSelectorName = [NSString stringWithFormat:@"ORIG_%@_%@", NSStringFromClass(cls), NSStringFromSelector(selector)];
     SEL fixedOriginalSelector = NSSelectorFromString(fixedOriginalSelectorName);
@@ -89,9 +89,9 @@ SEL MTFixSelector(Class cls, SEL selector)
  @param invocation NSInvocation 对象
  @param fixedSelector 修正后的 SEL
  */
-void MTHandleInvocation(NSInvocation *invocation, SEL fixedSelector)
+static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
 {
-    NSString *methodDescription = MTMethodDescription(object_getClass(invocation.target), invocation.selector);
+    NSString *methodDescription = mt_methodDescription(object_getClass(invocation.target), invocation.selector);
     MTRule *rule = MTEngine.defaultEngine.rules[methodDescription];
     
     if (rule.durationThreshold <= 0) {
@@ -139,18 +139,18 @@ void MTHandleInvocation(NSInvocation *invocation, SEL fixedSelector)
     
 }
 
-void MTForwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
+static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
 {
     SEL originalSelector = invocation.selector;
-    SEL fixedOriginalSelector = MTFixSelector(object_getClass(assignSlf), originalSelector);
+    SEL fixedOriginalSelector = mt_aliasForSelector(object_getClass(assignSlf), originalSelector);
     if (![assignSlf respondsToSelector:fixedOriginalSelector]) {
-        MTExecuteORIGForwardInvocation(assignSlf, selector, invocation);
+        mt_executeORIGForwardInvocation(assignSlf, selector, invocation);
         return;
     }
-    MTHandleInvocation(invocation, fixedOriginalSelector);
+    mt_handleInvocation(invocation, fixedOriginalSelector);
 }
 
-void MTOverrideMethod(Class cls, SEL selector, BOOL isClassMethod)
+static void mt_overrideMethod(Class cls, SEL selector, BOOL isClassMethod)
 {
     if (isClassMethod) {
         cls = object_getClass(cls);
@@ -167,7 +167,7 @@ void MTOverrideMethod(Class cls, SEL selector, BOOL isClassMethod)
     
     IMP msgForwardIMP = _objc_msgForward;
 #if !defined(__arm64__)
-    if (originType[0] == '{') {
+    if (originType[0] == _C_STRUCT_B) {
         //In some cases that returns struct, we should use the '_stret' API:
         //http://sealiesoftware.com/blog/archive/2008/10/30/objc_explain_objc_msgSend_stret.html
         //NSMethodSignature knows the detail but has no API to return, we can only get the info from debugDescription.
@@ -178,15 +178,19 @@ void MTOverrideMethod(Class cls, SEL selector, BOOL isClassMethod)
     }
 #endif
     
-    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) != (IMP)MTForwardInvocation) {
-        IMP originalForwardImp = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)MTForwardInvocation, "v@:@");
+    if (originalImp == msgForwardIMP) {
+        return;
+    }
+    
+    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) != (IMP)mt_forwardInvocation) {
+        IMP originalForwardImp = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
         if (originalForwardImp) {
             class_addMethod(cls, NSSelectorFromString(@"originalForwardInvocation:"), originalForwardImp, "v@:@");
         }
     }
     
     if (class_respondsToSelector(cls, selector)) {
-        SEL fixedOriginalSelector = MTFixSelector(cls, selector);
+        SEL fixedOriginalSelector = mt_aliasForSelector(cls, selector);
         if(!class_respondsToSelector(cls, fixedOriginalSelector)) {
             class_addMethod(cls, fixedOriginalSelector, originalImp, originType);
         }
@@ -197,7 +201,7 @@ void MTOverrideMethod(Class cls, SEL selector, BOOL isClassMethod)
     class_replaceMethod(cls, selector, msgForwardIMP, originType);
 }
 
-void MTExecuteORIGForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
+static void mt_executeORIGForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
 {
     SEL origForwardSelector = NSSelectorFromString(@"originalForwardInvocation:");
     
