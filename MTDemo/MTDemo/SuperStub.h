@@ -10,6 +10,6 @@
 
 @interface SuperStub : NSObject
 
-+ (void)foo:(NSDate *)arg;
+- (void)foo:(NSDate *)arg;
 
 @end

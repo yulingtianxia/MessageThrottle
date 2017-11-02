@@ -72,8 +72,24 @@ static NSObject *_nilObj;
 
 - (void)updateRule:(MTRule *)rule
 {
-    self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
-    mt_overrideMethod(rule.target, rule.selector);
+    __block BOOL alreadyHookClassHierarchy = NO;
+    [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
+        if (rule.selector == obj.selector
+            && object_isClass(rule.target)
+            && object_isClass(obj.target)) {
+            Class clsA = rule.target;
+            Class clsB = obj.target;
+            alreadyHookClassHierarchy = [clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA];
+            *stop = alreadyHookClassHierarchy;
+            NSString *errorDescription = [NSString stringWithFormat:@"Error: %@ already apply rule in %@. A message can only have one throttle per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB)];
+            NSLog(@"%@", errorDescription);
+        }
+    }];
+    
+    if (!alreadyHookClassHierarchy) {
+        self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
+        mt_overrideMethod(rule.target, rule.selector);
+    }
 }
 
 - (BOOL)deleteRule:(MTRule *)rule
@@ -84,14 +100,21 @@ static NSObject *_nilObj;
 
 #pragma mark - Private Helper
 
-static NSString * mt_methodDescription(Class cls, SEL selector)
+static NSString * mt_methodDescription(id target, SEL selector)
 {
-    return [NSString stringWithFormat:@"%@ [%@ %@]", class_isMetaClass(cls) ? @"+" : @"-", NSStringFromClass(cls), NSStringFromSelector(selector)];
+    NSString *selectorName = NSStringFromSelector(selector);
+    if (object_isClass(target)) {
+        NSString *className = NSStringFromClass(target);
+        return [NSString stringWithFormat:@"%@_%@_%@", class_isMetaClass(target) ? @"+" : @"-", className, selectorName];
+    }
+    else {
+        return [NSString stringWithFormat:@"%p_%@", target, selectorName];
+    }
 }
 
 static SEL mt_aliasForSelector(Class cls, SEL selector)
 {
-    NSString *fixedOriginalSelectorName = [NSString stringWithFormat:@"ORIG_%@_%@", NSStringFromClass(cls), NSStringFromSelector(selector)];
+    NSString *fixedOriginalSelectorName = [NSString stringWithFormat:@"ORIG_%@", NSStringFromSelector(selector)];
     SEL fixedOriginalSelector = NSSelectorFromString(fixedOriginalSelectorName);
     return fixedOriginalSelector;
 }
@@ -104,8 +127,13 @@ static SEL mt_aliasForSelector(Class cls, SEL selector)
  */
 static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
 {
-    NSString *methodDescription = mt_methodDescription(object_getClass(invocation.target), invocation.selector);
-    MTRule *rule = MTEngine.defaultEngine.rules[methodDescription];
+    NSString *methodDescriptionForInstance = mt_methodDescription(invocation.target, invocation.selector);
+    NSString *methodDescriptionForClass = mt_methodDescription(object_getClass(invocation.target), invocation.selector);
+    
+    MTRule *rule = MTEngine.defaultEngine.rules[methodDescriptionForInstance];
+    if (!rule) {
+        rule = MTEngine.defaultEngine.rules[methodDescriptionForClass];
+    }
     
     if (rule.durationThreshold <= 0) {
         [invocation setSelector:fixedSelector];
@@ -247,3 +275,4 @@ static void mt_executeORIGForwardInvocation(id slf, SEL selector, NSInvocation *
 }
 
 @end
+

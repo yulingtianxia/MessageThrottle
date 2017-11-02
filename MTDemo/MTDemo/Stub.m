@@ -10,7 +10,8 @@
 
 @implementation Stub
 
-+ (void)foo:(NSDate *)arg {
+- (void)foo:(NSDate *)arg {
+    [super foo:arg];
     NSLog(@"Stub foo: %@", arg);
 }
 
