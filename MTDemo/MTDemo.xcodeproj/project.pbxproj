@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A4092CDF1FAAFB1B00F6935B /* Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CDE1FAAFB1B00F6935B /* Stub.m */; };
+		A4092CE21FAAFB2F00F6935B /* SuperStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CE11FAAFB2F00F6935B /* SuperStub.m */; };
 		A4DB9ED91FA709A400826A8F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9ED81FA709A400826A8F /* AppDelegate.m */; };
 		A4DB9EDC1FA709A400826A8F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9EDB1FA709A400826A8F /* ViewController.m */; };
 		A4DB9EDF1FA709A400826A8F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A4DB9EDD1FA709A400826A8F /* Main.storyboard */; };
@@ -37,6 +39,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A4092CDD1FAAFB1B00F6935B /* Stub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Stub.h; sourceTree = "<group>"; };
+		A4092CDE1FAAFB1B00F6935B /* Stub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Stub.m; sourceTree = "<group>"; };
+		A4092CE01FAAFB2F00F6935B /* SuperStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SuperStub.h; sourceTree = "<group>"; };
+		A4092CE11FAAFB2F00F6935B /* SuperStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SuperStub.m; sourceTree = "<group>"; };
 		A4DB9ED41FA709A400826A8F /* MTDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4DB9ED71FA709A400826A8F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A4DB9ED81FA709A400826A8F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -110,6 +116,10 @@
 				A4DB9ED81FA709A400826A8F /* AppDelegate.m */,
 				A4DB9EDA1FA709A400826A8F /* ViewController.h */,
 				A4DB9EDB1FA709A400826A8F /* ViewController.m */,
+				A4092CDD1FAAFB1B00F6935B /* Stub.h */,
+				A4092CDE1FAAFB1B00F6935B /* Stub.m */,
+				A4092CE01FAAFB2F00F6935B /* SuperStub.h */,
+				A4092CE11FAAFB2F00F6935B /* SuperStub.m */,
 				A4DB9EDD1FA709A400826A8F /* Main.storyboard */,
 				A4DB9EE01FA709A400826A8F /* Assets.xcassets */,
 				A4DB9EE21FA709A400826A8F /* LaunchScreen.storyboard */,
@@ -280,6 +290,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A4092CDF1FAAFB1B00F6935B /* Stub.m in Sources */,
+				A4092CE21FAAFB2F00F6935B /* SuperStub.m in Sources */,
 				A4DB9F0C1FA70A0700826A8F /* MTEngine.m in Sources */,
 				A4DB9EDC1FA709A400826A8F /* ViewController.m in Sources */,
 				A4DB9EE71FA709A400826A8F /* main.m in Sources */,

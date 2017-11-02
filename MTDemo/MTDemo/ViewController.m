@@ -8,6 +8,8 @@
 
 #import "ViewController.h"
 #import "MTEngine.h"
+#import "Stub.h"
+#import "SuperStub.h"
 
 @interface ViewController ()
 
@@ -19,7 +21,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     MTRule *rule = [MTRule new];
-    rule.target = mt_metaClass(self.class);
+    rule.target = mt_metaClass(SuperStub.class);
     rule.selector = @selector(foo:);
     rule.durationThreshold = 2;
     rule.mode = MTPerformModeDebounce;
@@ -31,32 +33,30 @@
         while (YES) {
 //            SEL selector = NSSelectorFromString(@"bar1");
             @autoreleasepool {
-//                [ViewController foo:selector];
+                [Stub foo:[NSDate date]];
             }
         }
     });
-    __block NSTimeInterval lastTime;
-    __block NSTimeInterval value = 1;
+//    __block NSTimeInterval lastTime;
+//    __block NSTimeInterval value = 1;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (YES) {
 //            SEL selector = NSSelectorFromString(@"bar2");
             @autoreleasepool {
-                NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+//                NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
                 
-                if (now - lastTime > value) {
-                    lastTime = now;
-                    value += 0.1;
-                    NSLog(@"message send value:%f", value);
-                    [ViewController foo:[NSDate date]];
-                }
+//                if (now - lastTime > value) {
+//                    lastTime = now;
+//                    value += 0.1;
+//                    NSLog(@"message send value:%f", value);
+//                    [Stub foo:[NSDate date]];
+//                }
             }
         }
     });
+    
 }
 
-+ (void)foo:(NSDate *)arg {
-    NSLog(@"foo: %@", arg);
-}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

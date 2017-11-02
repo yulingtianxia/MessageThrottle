@@ -76,6 +76,12 @@ static NSObject *_nilObj;
     mt_overrideMethod(rule.target, rule.selector);
 }
 
+- (BOOL)deleteRule:(MTRule *)rule
+{
+    // TODO: delete rule
+    return NO;
+}
+
 #pragma mark - Private Helper
 
 static NSString * mt_methodDescription(Class cls, SEL selector)
@@ -157,6 +163,8 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
     mt_handleInvocation(invocation, fixedOriginalSelector);
 }
 
+static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";
+
 static void mt_overrideMethod(id target, SEL selector)
 {
     Class cls;
@@ -197,7 +205,7 @@ static void mt_overrideMethod(id target, SEL selector)
     if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) != (IMP)mt_forwardInvocation) {
         IMP originalForwardImp = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
         if (originalForwardImp) {
-            class_addMethod(cls, NSSelectorFromString(@"originalForwardInvocation:"), originalForwardImp, "v@:@");
+            class_addMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName), originalForwardImp, "v@:@");
         }
     }
     
@@ -215,7 +223,7 @@ static void mt_overrideMethod(id target, SEL selector)
 
 static void mt_executeORIGForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
 {
-    SEL origForwardSelector = NSSelectorFromString(@"originalForwardInvocation:");
+    SEL origForwardSelector = NSSelectorFromString(MTForwardInvocationSelectorName);
     
     if ([slf respondsToSelector:origForwardSelector]) {
         NSMethodSignature *methodSignature = [slf methodSignatureForSelector:origForwardSelector];
