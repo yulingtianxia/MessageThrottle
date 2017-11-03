@@ -1,22 +1,41 @@
 # MessageThrottle
 
-MessageThrottle is a lightweight library helps you control Objective-C message's forwarding frequency. It's an implementation of function throttle/debounce developed with Objective-C runtime.
+MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. To learn more about funtion throttle/debounce, watching [this](http://demo.nimius.net/debounce_throttle/).
 
 ## Usage
 
 The following example shows how to restrict the frequency of forwarding `- [ViewController foo:]` message to 10 times per second.
 
 ```
+Stub *s = [Stub new];
 MTRule *rule = [MTRule new];
-rule.cls = ViewController.class;
+rule.target = s; // You can also assign `Stub.class` or `mt_metaClass(Stub.class)`
 rule.selector = @selector(foo:);
-rule.durationThreshold = 0.1;
-[MTEngine.defaultEngine updateRule:rule];
+rule.durationThreshold = 0.01;
+[MTEngine.defaultEngine applyRule:rule];
 ```
 
-`MTRule` represents the rule of a message throttle, which contains message's infomation and frequency. If you want to restrict a class method, just set value of `classMethod` property to `YES`. `MTRule` also define the mode of performing selector. There are three modes in `MTMode`: `MTModePerformFirstly`, `MTModePerformLast` and `MTModePerformDebounce`. 
+`MTRule` represents the rule of a message throttle, which contains strategy and frequency of sending messages. 
 
-The default mode is `MTModePerformFirstly`. `MTModePerformFirstly` will performs the first message and ignore all following messages during `durationThreshold`.
+You can assign an instance or (meta)class to `target` property. When you assign an instance to `target`, MessageThrottle will only restrict messages send to this instance. If you want to restrict a class method, just using `mt_metaClass()` to get it's meta class, and assign the meta class to `target`.
+
+`MTRule` also define the mode of performing selector. There are three modes defined in `MTMode`: `MTModePerformFirstly`, `MTModePerformLast` and `MTModePerformDebounce`. 
+
+The default mode is `MTModePerformDebounce`. `MTModePerformDebounce` will restart timer when another message arrives during `durationThreshold`. So there must be a delay of `durationThreshold` at least. 
+
+```
+MTModePerformDebounce:
+start                                        end
+|           durationThreshold(old)             |
+@----------------------@---------------------->>
+|                      |                 
+ignore                 will perform at end of new duration
+                       |--------------------------------------------->>
+                       |           durationThreshold(new)             |
+                       start                                        end
+```
+
+`MTModePerformFirstly` will performs the first message and ignore all following messages during `durationThreshold`.
 
 ```
 MTModePerformFirstly:
@@ -38,23 +57,9 @@ start                                                                end
 ignore                    ignore     ignore          will perform at end
 ```
 
-`MTModePerformDebounce` will restart timer when another message arrives during `durationThreshold`. So there must be a delay of `durationThreshold` at least. 
-
-```
-MTModePerformDebounce:
-start                                        end
-|           durationThreshold(old)             |
-@----------------------@---------------------->>
-|                      |                 
-ignore                 will perform at end of new duration
-                       |--------------------------------------------->>
-                       |           durationThreshold(new)             |
-                       start                                        end
-```
-
 When using `MTModePerformLast` or `MTModePerformDebounce`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default. `MTModePerformLast` and `MTModePerformDebounce` modes will also use the last arguments to perform messages.
 
-`MTEngine` is a singleton class. It manages all rules of message throttles. `updateRule:` method will cover the old rule of the same message.
+`MTEngine` is a singleton class. It manages all rules of message throttles. You can use `applyRule:` method to apply a rule or update an old rule that already exists. Using it's `discardRule:` method to discardRule a rule.
 
 ## Installation
 

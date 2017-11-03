@@ -1,12 +1,12 @@
 //
-//  MTEngine.m
+//  MessageThrottle.m
 //  MessageThrottle
 //
-//  Created by 杨萧玉 on 2017/10/19.
+//  Created by 杨萧玉 on 2017/11/04.
 //  Copyright © 2017年 杨萧玉. All rights reserved.
 //
 
-#import "MTEngine.h"
+#import "MessageThrottle.h"
 #import <objc/runtime.h>
 #import <objc/message.h>
 #import <pthread.h>
@@ -73,10 +73,10 @@ static pthread_mutex_t mutex;
     return self;
 }
 
-- (BOOL)updateRule:(MTRule *)rule
+- (BOOL)applyRule:(MTRule *)rule
 {
     pthread_mutex_lock(&mutex);
-    __block BOOL shouldHook = YES;
+    __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
             if (rule.selector == obj.selector
@@ -84,36 +84,36 @@ static pthread_mutex_t mutex;
                 && object_isClass(obj.target)) {
                 Class clsA = rule.target;
                 Class clsB = obj.target;
-                shouldHook = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
-                *stop = shouldHook;
+                shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
+                *stop = shouldApply;
                 NSString *errorDescription = [NSString stringWithFormat:@"Error: %@ already apply rule in %@. A message can only have one throttle per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB)];
                 NSLog(@"%@", errorDescription);
             }
         }];
         
-        if (shouldHook) {
+        if (shouldApply) {
             self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
             mt_overrideMethod(rule.target, rule.selector);
         }
     }
     pthread_mutex_unlock(&mutex);
-    return shouldHook;
+    return shouldApply;
 }
 
-- (BOOL)deleteRule:(MTRule *)rule
+- (BOOL)discardRule:(MTRule *)rule
 {
     pthread_mutex_lock(&mutex);
-    BOOL needsDelete = NO;
+    BOOL shouldDiscard = NO;
     if (mt_checkRuleValid(rule)) {
         NSString *description = mt_methodDescription(rule.target, rule.selector);
-        needsDelete = self.rules[description] != nil;
-        if (needsDelete) {
+        shouldDiscard = self.rules[description] != nil;
+        if (shouldDiscard) {
             self.rules[description] = nil;
             mt_recoverMethod(rule.target, rule.selector);
         }
     }
     pthread_mutex_unlock(&mutex);
-    return needsDelete;
+    return shouldDiscard;
 }
 
 #pragma mark - Private Helper

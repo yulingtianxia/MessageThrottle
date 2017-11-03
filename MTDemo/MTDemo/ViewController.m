@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-#import "MTEngine.h"
+#import "MessageThrottle.h"
 #import "Stub.h"
 #import "SuperStub.h"
 #import <objc/runtime.h>
@@ -38,11 +38,11 @@
     rule1.mode = MTPerformModeDebounce;
     rule1.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-    [MTEngine.defaultEngine updateRule:rule];
-//    [MTEngine.defaultEngine updateRule:rule1];
+    [MTEngine.defaultEngine applyRule:rule];
+//    [MTEngine.defaultEngine applyRule:rule1];
 //
-//    [MTEngine.defaultEngine deleteRule:rule];
-//    [MTEngine.defaultEngine deleteRule:rule];
+//    [MTEngine.defaultEngine discardRule:rule];
+//    [MTEngine.defaultEngine discardRule:rule];
     
     
     Stub *ss = [Stub new];
@@ -69,7 +69,7 @@
                 }
                 if (lastTime > 0 && now - lastTime > 3) {
                     [s foo:[NSDate date]];
-                    [MTEngine.defaultEngine deleteRule:rule];
+                    [MTEngine.defaultEngine discardRule:rule];
                 }
             }
         }

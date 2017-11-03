@@ -1,8 +1,8 @@
 //
-//  MTEngine.h
+//  MessageThrottle.h
 //  MessageThrottle
 //
-//  Created by 杨萧玉 on 2017/10/19.
+//  Created by 杨萧玉 on 2017/11/04.
 //  Copyright © 2017年 杨萧玉. All rights reserved.
 //
 
@@ -68,20 +68,20 @@ Class mt_metaClass(Class cls);
 @property (nonatomic, class, readonly) MTEngine *defaultEngine;
 
 /**
- 更细规则，会覆盖已有的规则
+ 应用规则，会覆盖已有的规则
 
  @param rule MTRule 对象
  @return 更新成功返回 YES；如果规则不合法或继承链上已有相同 selector 的规则，则返回 NO
  */
-- (BOOL)updateRule:(MTRule *)rule;
+- (BOOL)applyRule:(MTRule *)rule;
 
 /**
- 删除规则
+ 废除规则
 
  @param rule MTRule 对象
- @return 删除成功返回 YES；如果规则不存在或不合法，则返回 NO
+ @return 废除成功返回 YES；如果规则不存在或不合法，则返回 NO
  */
-- (BOOL)deleteRule:(MTRule *)rule;
+- (BOOL)discardRule:(MTRule *)rule;
 
 @end
 
