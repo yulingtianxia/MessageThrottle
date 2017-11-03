@@ -9,6 +9,7 @@
 #import "MTEngine.h"
 #import <objc/runtime.h>
 #import <objc/message.h>
+#import <pthread.h>
 
 Class mt_metaClass(Class cls)
 {
@@ -31,7 +32,7 @@ Class mt_metaClass(Class cls)
 {
     self = [super init];
     if (self) {
-        _mode = MTPerformModeFirstly;
+        _mode = MTPerformModeDebounce;
         _lastTimeRequest = 0;
         _messageQueue = dispatch_get_main_queue();
     }
@@ -49,6 +50,7 @@ Class mt_metaClass(Class cls)
 @implementation MTEngine
 
 static NSObject *_nilObj;
+static pthread_mutex_t mutex;
 
 + (instancetype)defaultEngine
 {
@@ -66,39 +68,78 @@ static NSObject *_nilObj;
     if (self) {
         _rules = [NSMutableDictionary dictionary];
         _nilObj = [NSObject new];
+        pthread_mutex_init(&mutex, NULL);
     }
     return self;
 }
 
-- (void)updateRule:(MTRule *)rule
+- (BOOL)updateRule:(MTRule *)rule
 {
-    __block BOOL alreadyHookClassHierarchy = NO;
-    [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
-        if (rule.selector == obj.selector
-            && object_isClass(rule.target)
-            && object_isClass(obj.target)) {
-            Class clsA = rule.target;
-            Class clsB = obj.target;
-            alreadyHookClassHierarchy = [clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA];
-            *stop = alreadyHookClassHierarchy;
-            NSString *errorDescription = [NSString stringWithFormat:@"Error: %@ already apply rule in %@. A message can only have one throttle per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB)];
-            NSLog(@"%@", errorDescription);
+    pthread_mutex_lock(&mutex);
+    __block BOOL shouldHook = YES;
+    if (mt_checkRuleValid(rule)) {
+        [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
+            if (rule.selector == obj.selector
+                && object_isClass(rule.target)
+                && object_isClass(obj.target)) {
+                Class clsA = rule.target;
+                Class clsB = obj.target;
+                shouldHook = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
+                *stop = shouldHook;
+                NSString *errorDescription = [NSString stringWithFormat:@"Error: %@ already apply rule in %@. A message can only have one throttle per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB)];
+                NSLog(@"%@", errorDescription);
+            }
+        }];
+        
+        if (shouldHook) {
+            self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
+            mt_overrideMethod(rule.target, rule.selector);
         }
-    }];
-    
-    if (!alreadyHookClassHierarchy) {
-        self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
-        mt_overrideMethod(rule.target, rule.selector);
     }
+    pthread_mutex_unlock(&mutex);
+    return shouldHook;
 }
 
 - (BOOL)deleteRule:(MTRule *)rule
 {
-    // TODO: delete rule
-    return NO;
+    pthread_mutex_lock(&mutex);
+    BOOL needsDelete = NO;
+    if (mt_checkRuleValid(rule)) {
+        NSString *description = mt_methodDescription(rule.target, rule.selector);
+        needsDelete = self.rules[description] != nil;
+        if (needsDelete) {
+            self.rules[description] = nil;
+            mt_recoverMethod(rule.target, rule.selector);
+        }
+    }
+    pthread_mutex_unlock(&mutex);
+    return needsDelete;
 }
 
 #pragma mark - Private Helper
+
+static BOOL mt_checkRuleValid(MTRule *rule)
+{
+    if (rule.target && rule.selector && rule.durationThreshold > 0) {
+        NSString *selectorName = NSStringFromSelector(rule.selector);
+        if ([selectorName isEqualToString:@"forwardInvocation:"]) {
+            return NO;
+        }
+        Class cls;
+        if (object_isClass(rule.target)) {
+            cls = rule.target;
+        }
+        else {
+            cls = object_getClass(rule.target);
+        }
+        NSString *className = NSStringFromClass(cls);
+        if ([className isEqualToString:@"MTRule"] || [className isEqualToString:@"MTEngine"]) {
+            return NO;
+        }
+        return YES;
+    }
+    return NO;
+}
 
 static NSString * mt_methodDescription(id target, SEL selector)
 {
@@ -114,7 +155,7 @@ static NSString * mt_methodDescription(id target, SEL selector)
 
 static SEL mt_aliasForSelector(Class cls, SEL selector)
 {
-    NSString *fixedOriginalSelectorName = [NSString stringWithFormat:@"ORIG_%@", NSStringFromSelector(selector)];
+    NSString *fixedOriginalSelectorName = [NSString stringWithFormat:@"__mt_%@", NSStringFromSelector(selector)];
     SEL fixedOriginalSelector = NSSelectorFromString(fixedOriginalSelectorName);
     return fixedOriginalSelector;
 }
@@ -177,7 +218,6 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
             });
             break;
     }
-    
 }
 
 static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
@@ -185,7 +225,7 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
     SEL originalSelector = invocation.selector;
     SEL fixedOriginalSelector = mt_aliasForSelector(object_getClass(assignSlf), originalSelector);
     if (![assignSlf respondsToSelector:fixedOriginalSelector]) {
-        mt_executeORIGForwardInvocation(assignSlf, selector, invocation);
+        mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
         return;
     }
     mt_handleInvocation(invocation, fixedOriginalSelector);
@@ -202,7 +242,6 @@ static void mt_overrideMethod(id target, SEL selector)
     else {
         cls = object_getClass(target);
     }
-    // TODO: hook instance
     
     Method originMethod = class_getInstanceMethod(cls, selector);
     if (!originMethod) {
@@ -249,7 +288,44 @@ static void mt_overrideMethod(id target, SEL selector)
     class_replaceMethod(cls, selector, msgForwardIMP, originType);
 }
 
-static void mt_executeORIGForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
+static void mt_recoverMethod(id target, SEL selector)
+{
+    Class cls;
+    if (object_isClass(target)) {
+        cls = target;
+    }
+    else {
+        cls = object_getClass(target);
+        if (MTEngine.defaultEngine.rules[mt_methodDescription(cls, selector)]) {
+            return;
+        }
+    }
+    
+    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) == (IMP)mt_forwardInvocation) {
+        IMP originalForwardImp = class_getMethodImplementation(cls, NSSelectorFromString(MTForwardInvocationSelectorName));
+        if (originalForwardImp) {
+            class_replaceMethod(cls, @selector(forwardInvocation:), originalForwardImp, "v@:@");
+        }
+    }
+    else {
+        return;
+    }
+    
+    Method originMethod = class_getInstanceMethod(cls, selector);
+    if (!originMethod) {
+        NSCAssert(NO, @"unrecognized selector -%@ for class %@", NSStringFromSelector(selector), NSStringFromClass(cls));
+        return;
+    }
+    const char *originType = (char *)method_getTypeEncoding(originMethod);
+ 
+    SEL fixedOriginalSelector = mt_aliasForSelector(cls, selector);
+    if (class_respondsToSelector(cls, fixedOriginalSelector)) {
+        IMP originalImp = class_getMethodImplementation(cls, fixedOriginalSelector);
+        class_replaceMethod(cls, selector, originalImp, originType);
+    }
+}
+
+static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
 {
     SEL origForwardSelector = NSSelectorFromString(MTForwardInvocationSelectorName);
     

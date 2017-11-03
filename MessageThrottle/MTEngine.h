@@ -39,7 +39,7 @@ Class mt_metaClass(Class cls);
 /**
  target, 可以为实例，类，元类
  */
-@property (nonatomic) id target;
+@property (nonatomic, weak) id target;
 
 /**
  节流消息的 SEL
@@ -71,14 +71,15 @@ Class mt_metaClass(Class cls);
  更细规则，会覆盖已有的规则
 
  @param rule MTRule 对象
+ @return 更新成功返回 YES；如果规则不合法或继承链上已有相同 selector 的规则，则返回 NO
  */
-- (void)updateRule:(MTRule *)rule;
+- (BOOL)updateRule:(MTRule *)rule;
 
 /**
  删除规则
 
  @param rule MTRule 对象
- @return 删除成功返回 YES；如果规则不存在，则返回 NO
+ @return 删除成功返回 YES；如果规则不存在或不合法，则返回 NO
  */
 - (BOOL)deleteRule:(MTRule *)rule;
 
