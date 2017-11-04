@@ -45,7 +45,7 @@
 //    [MTEngine.defaultEngine discardRule:rule];
     
     
-    Stub *ss = [Stub new];
+//    Stub *ss = [Stub new];
     
 //    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 //        while (YES) {

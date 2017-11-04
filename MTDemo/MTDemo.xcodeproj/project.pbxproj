@@ -10,9 +10,8 @@
 		A4092CDF1FAAFB1B00F6935B /* Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CDE1FAAFB1B00F6935B /* Stub.m */; };
 		A4092CE21FAAFB2F00F6935B /* SuperStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CE11FAAFB2F00F6935B /* SuperStub.m */; };
 		A48995331FAE2F6200A7A58A /* MessageThrottleKit.h in Headers */ = {isa = PBXBuildFile; fileRef = A48995311FAE2F6200A7A58A /* MessageThrottleKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A48995361FAE2F6200A7A58A /* MessageThrottleKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A489952F1FAE2F6200A7A58A /* MessageThrottleKit.framework */; };
-		A48995371FAE2F6200A7A58A /* MessageThrottleKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A489952F1FAE2F6200A7A58A /* MessageThrottleKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A489953C1FAE2F8400A7A58A /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
+		A489953D1FAE3EC600A7A58A /* MessageThrottle.h in Headers */ = {isa = PBXBuildFile; fileRef = A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A4DB9ED91FA709A400826A8F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9ED81FA709A400826A8F /* AppDelegate.m */; };
 		A4DB9EDC1FA709A400826A8F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9EDB1FA709A400826A8F /* ViewController.m */; };
 		A4DB9EDF1FA709A400826A8F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A4DB9EDD1FA709A400826A8F /* Main.storyboard */; };
@@ -26,13 +25,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		A48995341FAE2F6200A7A58A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A4DB9ECC1FA709A400826A8F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A489952E1FAE2F6200A7A58A;
-			remoteInfo = MessageThrottleKit;
-		};
 		A4DB9EED1FA709A400826A8F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A4DB9ECC1FA709A400826A8F /* Project object */;
@@ -48,20 +40,6 @@
 			remoteInfo = MTDemo;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		A489953B1FAE2F6200A7A58A /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				A48995371FAE2F6200A7A58A /* MessageThrottleKit.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A4092CDD1FAAFB1B00F6935B /* Stub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Stub.h; sourceTree = "<group>"; };
@@ -103,7 +81,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A48995361FAE2F6200A7A58A /* MessageThrottleKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -212,6 +189,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A48995331FAE2F6200A7A58A /* MessageThrottleKit.h in Headers */,
+				A489953D1FAE3EC600A7A58A /* MessageThrottle.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,12 +221,10 @@
 				A4DB9ED01FA709A400826A8F /* Sources */,
 				A4DB9ED11FA709A400826A8F /* Frameworks */,
 				A4DB9ED21FA709A400826A8F /* Resources */,
-				A489953B1FAE2F6200A7A58A /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				A48995351FAE2F6200A7A58A /* PBXTargetDependency */,
 			);
 			name = MTDemo;
 			productName = MTDemo;
@@ -417,11 +393,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		A48995351FAE2F6200A7A58A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A489952E1FAE2F6200A7A58A /* MessageThrottleKit */;
-			targetProxy = A48995341FAE2F6200A7A58A /* PBXContainerItemProxy */;
-		};
 		A4DB9EEE1FA709A400826A8F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A4DB9ED31FA709A400826A8F /* MTDemo */;
