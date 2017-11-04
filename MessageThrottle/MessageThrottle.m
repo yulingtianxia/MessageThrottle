@@ -49,7 +49,6 @@ Class mt_metaClass(Class cls)
 
 @implementation MTEngine
 
-static NSObject *_nilObj;
 static pthread_mutex_t mutex;
 
 + (instancetype)defaultEngine
@@ -67,7 +66,6 @@ static pthread_mutex_t mutex;
     self = [super init];
     if (self) {
         _rules = [NSMutableDictionary dictionary];
-        _nilObj = [NSObject new];
         pthread_mutex_init(&mutex, NULL);
     }
     return self;
