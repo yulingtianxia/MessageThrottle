@@ -3,7 +3,7 @@ s.name         = "MessageThrottle"
 s.version      = "1.0.0"
 s.summary      = "A lightweight message throttle."
 s.description  = <<-DESC
-MessageThrottle is a tool helps you control Objective-C message's forwarding frequency.
+MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. 
 DESC
 s.homepage     = "https://github.com/yulingtianxia/MessageThrottle"
 
@@ -16,7 +16,7 @@ s.platform     = :ios, '6.0'
 s.requires_arc = true
 
 s.source_files = "MessageThrottle/*.{h,m}"
-s.public_header_files = "MessageThrottle/MTEngine.h"
+s.public_header_files = "MessageThrottle/MessageThrottle.h"
 s.frameworks = 'Foundation'
 
 end
