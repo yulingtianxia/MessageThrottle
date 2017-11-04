@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		A4092CDF1FAAFB1B00F6935B /* Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CDE1FAAFB1B00F6935B /* Stub.m */; };
 		A4092CE21FAAFB2F00F6935B /* SuperStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CE11FAAFB2F00F6935B /* SuperStub.m */; };
+		A48995331FAE2F6200A7A58A /* MessageThrottleKit.h in Headers */ = {isa = PBXBuildFile; fileRef = A48995311FAE2F6200A7A58A /* MessageThrottleKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A48995361FAE2F6200A7A58A /* MessageThrottleKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A489952F1FAE2F6200A7A58A /* MessageThrottleKit.framework */; };
+		A48995371FAE2F6200A7A58A /* MessageThrottleKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A489952F1FAE2F6200A7A58A /* MessageThrottleKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A489953C1FAE2F8400A7A58A /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
 		A4DB9ED91FA709A400826A8F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9ED81FA709A400826A8F /* AppDelegate.m */; };
 		A4DB9EDC1FA709A400826A8F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9EDB1FA709A400826A8F /* ViewController.m */; };
 		A4DB9EDF1FA709A400826A8F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A4DB9EDD1FA709A400826A8F /* Main.storyboard */; };
@@ -22,6 +26,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		A48995341FAE2F6200A7A58A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A4DB9ECC1FA709A400826A8F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A489952E1FAE2F6200A7A58A;
+			remoteInfo = MessageThrottleKit;
+		};
 		A4DB9EED1FA709A400826A8F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A4DB9ECC1FA709A400826A8F /* Project object */;
@@ -38,11 +49,28 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		A489953B1FAE2F6200A7A58A /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A48995371FAE2F6200A7A58A /* MessageThrottleKit.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		A4092CDD1FAAFB1B00F6935B /* Stub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Stub.h; sourceTree = "<group>"; };
 		A4092CDE1FAAFB1B00F6935B /* Stub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Stub.m; sourceTree = "<group>"; };
 		A4092CE01FAAFB2F00F6935B /* SuperStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SuperStub.h; sourceTree = "<group>"; };
 		A4092CE11FAAFB2F00F6935B /* SuperStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SuperStub.m; sourceTree = "<group>"; };
+		A489952F1FAE2F6200A7A58A /* MessageThrottleKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MessageThrottleKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A48995311FAE2F6200A7A58A /* MessageThrottleKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageThrottleKit.h; sourceTree = "<group>"; };
+		A48995321FAE2F6200A7A58A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A4DB9ED41FA709A400826A8F /* MTDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4DB9ED71FA709A400826A8F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A4DB9ED81FA709A400826A8F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -64,10 +92,18 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A489952B1FAE2F6200A7A58A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4DB9ED11FA709A400826A8F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A48995361FAE2F6200A7A58A /* MessageThrottleKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,6 +124,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A48995301FAE2F6200A7A58A /* MessageThrottleKit */ = {
+			isa = PBXGroup;
+			children = (
+				A48995311FAE2F6200A7A58A /* MessageThrottleKit.h */,
+				A48995321FAE2F6200A7A58A /* Info.plist */,
+			);
+			path = MessageThrottleKit;
+			sourceTree = "<group>";
+		};
 		A4DB9ECB1FA709A400826A8F = {
 			isa = PBXGroup;
 			children = (
@@ -95,6 +140,7 @@
 				A4DB9F091FA709EC00826A8F /* MessageThrottle */,
 				A4DB9EEF1FA709A400826A8F /* MTDemoTests */,
 				A4DB9EFA1FA709A400826A8F /* MTDemoUITests */,
+				A48995301FAE2F6200A7A58A /* MessageThrottleKit */,
 				A4DB9ED51FA709A400826A8F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -105,6 +151,7 @@
 				A4DB9ED41FA709A400826A8F /* MTDemo.app */,
 				A4DB9EEC1FA709A400826A8F /* MTDemoTests.xctest */,
 				A4DB9EF71FA709A400826A8F /* MTDemoUITests.xctest */,
+				A489952F1FAE2F6200A7A58A /* MessageThrottleKit.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -159,7 +206,36 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		A489952C1FAE2F6200A7A58A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A48995331FAE2F6200A7A58A /* MessageThrottleKit.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
+		A489952E1FAE2F6200A7A58A /* MessageThrottleKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A48995381FAE2F6200A7A58A /* Build configuration list for PBXNativeTarget "MessageThrottleKit" */;
+			buildPhases = (
+				A489952A1FAE2F6200A7A58A /* Sources */,
+				A489952B1FAE2F6200A7A58A /* Frameworks */,
+				A489952C1FAE2F6200A7A58A /* Headers */,
+				A489952D1FAE2F6200A7A58A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MessageThrottleKit;
+			productName = MessageThrottleKit;
+			productReference = A489952F1FAE2F6200A7A58A /* MessageThrottleKit.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		A4DB9ED31FA709A400826A8F /* MTDemo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A4DB9F001FA709A400826A8F /* Build configuration list for PBXNativeTarget "MTDemo" */;
@@ -167,10 +243,12 @@
 				A4DB9ED01FA709A400826A8F /* Sources */,
 				A4DB9ED11FA709A400826A8F /* Frameworks */,
 				A4DB9ED21FA709A400826A8F /* Resources */,
+				A489953B1FAE2F6200A7A58A /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A48995351FAE2F6200A7A58A /* PBXTargetDependency */,
 			);
 			name = MTDemo;
 			productName = MTDemo;
@@ -222,6 +300,10 @@
 				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = "杨萧玉";
 				TargetAttributes = {
+					A489952E1FAE2F6200A7A58A = {
+						CreatedOnToolsVersion = 9.1;
+						ProvisioningStyle = Automatic;
+					};
 					A4DB9ED31FA709A400826A8F = {
 						CreatedOnToolsVersion = 9.0;
 						ProvisioningStyle = Automatic;
@@ -254,11 +336,19 @@
 				A4DB9ED31FA709A400826A8F /* MTDemo */,
 				A4DB9EEB1FA709A400826A8F /* MTDemoTests */,
 				A4DB9EF61FA709A400826A8F /* MTDemoUITests */,
+				A489952E1FAE2F6200A7A58A /* MessageThrottleKit */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A489952D1FAE2F6200A7A58A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4DB9ED21FA709A400826A8F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -286,6 +376,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A489952A1FAE2F6200A7A58A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A489953C1FAE2F8400A7A58A /* MessageThrottle.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4DB9ED01FA709A400826A8F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -319,6 +417,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		A48995351FAE2F6200A7A58A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A489952E1FAE2F6200A7A58A /* MessageThrottleKit */;
+			targetProxy = A48995341FAE2F6200A7A58A /* PBXContainerItemProxy */;
+		};
 		A4DB9EEE1FA709A400826A8F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A4DB9ED31FA709A400826A8F /* MTDemo */;
@@ -351,6 +454,54 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		A48995391FAE2F6200A7A58A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = D3RCVUP6VH;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = MessageThrottleKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MessageThrottleKit;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		A489953A1FAE2F6200A7A58A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = D3RCVUP6VH;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = MessageThrottleKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MessageThrottleKit;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 		A4DB9EFE1FA709A400826A8F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -544,6 +695,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A48995381FAE2F6200A7A58A /* Build configuration list for PBXNativeTarget "MessageThrottleKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A48995391FAE2F6200A7A58A /* Debug */,
+				A489953A1FAE2F6200A7A58A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A4DB9ECF1FA709A400826A8F /* Build configuration list for PBXProject "MTDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
