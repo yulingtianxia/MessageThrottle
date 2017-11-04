@@ -66,6 +66,7 @@ Class mt_metaClass(Class cls);
 @interface MTEngine : NSObject
 
 @property (nonatomic, class, readonly) MTEngine *defaultEngine;
+@property (nonatomic, readonly) NSArray<MTRule *> *allRules;
 
 /**
  应用规则，会覆盖已有的规则

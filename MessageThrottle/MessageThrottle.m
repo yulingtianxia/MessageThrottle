@@ -73,6 +73,11 @@ static pthread_mutex_t mutex;
     return self;
 }
 
+- (NSArray<MTRule *> *)allRules
+{
+    return [self.rules allValues];
+}
+
 - (BOOL)applyRule:(MTRule *)rule
 {
     pthread_mutex_lock(&mutex);
@@ -257,6 +262,10 @@ static void mt_overrideMethod(id target, SEL selector)
     if (originType[0] == _C_STRUCT_B) {
         //In some cases that returns struct, we should use the '_stret' API:
         //http://sealiesoftware.com/blog/archive/2008/10/30/objc_explain_objc_msgSend_stret.html
+        // As an ugly internal runtime implementation detail in the 32bit runtime, we need to determine of the method we hook returns a struct or anything larger than id.
+        // https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/LowLevelABI/000-Introduction/introduction.html
+        // https://github.com/ReactiveCocoa/ReactiveCocoa/issues/783
+        // http://infocenter.arm.com/help/topic/com.arm.doc.ihi0042e/IHI0042E_aapcs.pdf (Section 5.4)
         //NSMethodSignature knows the detail but has no API to return, we can only get the info from debugDescription.
         NSMethodSignature *methodSignature = [NSMethodSignature signatureWithObjCTypes:originType];
         if ([methodSignature.debugDescription rangeOfString:@"is special struct return? YES"].location != NSNotFound) {

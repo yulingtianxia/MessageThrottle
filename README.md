@@ -59,7 +59,7 @@ ignore                    ignore     ignore          will perform at end
 
 When using `MTModePerformLast` or `MTModePerformDebounce`, you can designate a dispatch queue which messages perform on. The `messageQueue` is main queue by default. `MTModePerformLast` and `MTModePerformDebounce` modes will also use the last arguments to perform messages.
 
-`MTEngine` is a singleton class. It manages all rules of message throttles. You can use `applyRule:` method to apply a rule or update an old rule that already exists. Using it's `discardRule:` method to discardRule a rule.
+`MTEngine` is a singleton class. It manages all rules of message throttles. You can use `applyRule:` method to apply a rule or update an old rule that already exists. Using it's `discardRule:` method to discardRule a rule. There is also a readonly property `allRules` for obtaining all rules in current application. 
 
 ## Installation
 
