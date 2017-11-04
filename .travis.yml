@@ -9,19 +9,16 @@ env:
 before_install:
 - brew update
 - brew outdated carthage || brew upgrade carthage
-before_script:
-#- carthage bootstrap
+before_script: 
 before_deploy:
 - carthage build --no-skip-current
 - carthage archive $FRAMEWORK_NAME
-script: xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo
-  -configuration Release -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO
+script: xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo -configuration
+  Release -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO
 deploy:
   provider: releases
   api_key:
-    secure: S8vW03RVhPHqs/nXaH0JJm36q2qcS0HnJVZdSSc3a8VkDovLdpTbH7OeNYT+/V+keekhnamrfI9KwEOKqEr34kP24BAv4d6Ej5mIqZ7Y+13IIU6BLaPV9WjBmJKl9af8zPMM6AwtgrWm3pnMp8IW3J+0Uz1N6UKe06P+Kuqljc0IzaOGShnEBcIQMu+XZEQXaAe+HOti/+Wzu9eta+HZgNS6Ne8YxFdjPXR1Vyempd3+hDW3BltprS3yrut30Q94XgGanTHQ4m3xX36SyupGl88790mxr9SNAHORlJIJOla/Dda1LNA6+f2GFSQuBoSXe5uAPOZOoqIyDSoda192gESM048TeIc6GbooofnSbGB4Jmk+lqBrYpHkJwoY7uxFcBK1h1IaHld6YQy9mVvtLBrjm8jIq0yamc+PD5wu4DWOhc68RPq4JjNTTM7AWkhGARodlKFa/9uow3qds3KSmsWkEFWuhP1VzyxDsu3iSwchWbP7UiVcpfnlEHIReeiQVsu7H0t1dR2ql7dz2pu7UqEgVpXIPbCAMs1XOe1uwA+inaZmrPhql0m0ARkhKTe6qm/WdbDmHT0g2rNZX8n4Aj471GoJc92Qrr5eflRidbUjauTtjCK2b9RVKRlSsWPLHrVQz5IimejQBRe9CmIbOyCxbDwEYskiVbbMi4YJ26w=
+    secure: arhqYQSqQ3ZCc2gZIlfQTFhea44CrohmXOIsjA5VtFcvOdJ29OMJZlimR3MD61+yJ+nxOt2107TMNqFBMGM425PQctCzPV68arVV+5393Fu5A+ewpcm/ir+ZoD5Iz8Y91Pk1vaYRVYMtFt91qFc/6Hmkm5Zgipf4gJTwOBZChGUC6EHBf1U/9b9S0+YvjFZ0rzXNnXWW72SC0wl1+mrRIAKL7pNUruI/l/2hCX54a8t0IFxrQReNbUm/k5/TYlnn24nXOmA+ezA7dTI3tYmpb2WcFUb44NjW+I9Qh5ooll8VgTDoCvBULtExaDoD79IQLEe4bKkBynqqLUnoPKIbxRCfeizoJr84BMCpuFEvuFLYcefZComvqDH6MQ92aArC2LkDmciSO6R0KbjareVVng2D/s/BO9+aJD83RTenDvDeJFGBTX9O60e3+r9Wr7r/Bx8Mwt4KoJ3K0xpFUWEkhMKfoH9XWalqS2BJww1jaFEuN82jRznWVCttOW6mfVqh8lE3B3PxPvEXJB0JdkSYA40u1yV51cQb+uY+PP6Vvvde3YgoxrCdXwbqNZHNQaxNXrk0GQ7wQlfVq3sKphIueIhK8SNTDo0JV2UgAAR1WD6NpvqqScXF8aRuFlRkOLn0uNp4XcCh8LegS6HfqBvpjwn2Q0bwTD8CgucUJFtXMD4=
   file: MessageThrottleKit.framework.zip
-  skip_cleanup: true
   on:
     repo: yulingtianxia/MessageThrottle
-    tags: true
