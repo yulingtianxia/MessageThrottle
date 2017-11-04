@@ -1,7 +1,7 @@
 osx_image: xcode9
 language: objective-c
 xcode_project: MTDemo
-xcode_scheme: MTDemo
+xcode_scheme: MessageThrottleKit
 xcode_sdk: iphoneos11.0
 env:
   global:
@@ -9,7 +9,7 @@ env:
 before_install:
 - brew update
 - brew outdated carthage || brew upgrade carthage
-before_script: 
+before_script:
 before_deploy:
 - carthage build --no-skip-current
 - carthage archive $FRAMEWORK_NAME
