@@ -149,10 +149,10 @@ static NSString * mt_methodDescription(id target, SEL selector)
     NSString *selectorName = NSStringFromSelector(selector);
     if (object_isClass(target)) {
         NSString *className = NSStringFromClass(target);
-        return [NSString stringWithFormat:@"%@_%@_%@", class_isMetaClass(target) ? @"+" : @"-", className, selectorName];
+        return [NSString stringWithFormat:@"%@ [%@ %@]", class_isMetaClass(target) ? @"+" : @"-", className, selectorName];
     }
     else {
-        return [NSString stringWithFormat:@"%p_%@", target, selectorName];
+        return [NSString stringWithFormat:@"[%p %@]", target, selectorName];
     }
 }
 
@@ -209,13 +209,11 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
             }
             break;
         case MTPerformModeDebounce:
-            rule.lastTimeRequest = now;
             invocation.selector = fixedSelector;
             rule.lastInvocation = invocation;
             [rule.lastInvocation retainArguments];
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
-                NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
-                if (now - rule.lastTimeRequest > rule.durationThreshold && rule.lastInvocation == invocation) {
+                if (rule.lastInvocation == invocation) {
                     [rule.lastInvocation invoke];
                 }
             });

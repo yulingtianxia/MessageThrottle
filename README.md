@@ -1,6 +1,12 @@
 # MessageThrottle
 
-MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. To learn more about funtion throttle/debounce, watching [this](http://demo.nimius.net/debounce_throttle/).
+[![CI Status](http://img.shields.io/travis/yulingtianxia/MessageThrottle.svg?style=flat)](https://travis-ci.org/yulingtianxia/MessageThrottle)
+[![Version](https://img.shields.io/cocoapods/v/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![License](https://img.shields.io/cocoapods/l/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
+[![Platform](https://img.shields.io/cocoapods/p/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
+
+MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. For a visual explaination of the differences between throttling and debouncing, [see this demo](http://demo.nimius.net/debounce_throttle/).
 
 ## Usage
 
@@ -17,7 +23,7 @@ rule.durationThreshold = 0.01;
 
 `MTRule` represents the rule of a message throttle, which contains strategy and frequency of sending messages. 
 
-You can assign an instance or (meta)class to `target` property. When you assign an instance to `target`, MessageThrottle will only restrict messages send to this instance. If you want to restrict a class method, just using `mt_metaClass()` to get it's meta class, and assign the meta class to `target`.
+You can assign an instance or (meta)class to `target` property. When you assign an instance to `target`, MessageThrottle will only restrict messages send to this instance. If you want to restrict a class method, just using `mt_metaClass()` to get it's meta class, and assign the meta class to `target`. Rules with instance `target` won't conflict with each other, and have a higher priority than rules with class `target`.
 
 `MTRule` also define the mode of performing selector. There are three modes defined in `MTMode`: `MTModePerformFirstly`, `MTModePerformLast` and `MTModePerformDebounce`. 
 
@@ -120,6 +126,10 @@ Just drag the "MessageThrottle" document folder into your project.
 - If you **found a bug**, open an issue.
 - If you **have a feature request**, open an issue.
 - If you **want to contribute**, submit a pull request.
+
+## Article
+
+- [Objective-C Message Throttle and Debounce](http://yulingtianxia.com/blog/2017/11/05/Objective-C-Message-Throttle-and-Debounce/)
 
 ## Author
 
