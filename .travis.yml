@@ -20,7 +20,6 @@ deploy:
   api_key:
     secure: arhqYQSqQ3ZCc2gZIlfQTFhea44CrohmXOIsjA5VtFcvOdJ29OMJZlimR3MD61+yJ+nxOt2107TMNqFBMGM425PQctCzPV68arVV+5393Fu5A+ewpcm/ir+ZoD5Iz8Y91Pk1vaYRVYMtFt91qFc/6Hmkm5Zgipf4gJTwOBZChGUC6EHBf1U/9b9S0+YvjFZ0rzXNnXWW72SC0wl1+mrRIAKL7pNUruI/l/2hCX54a8t0IFxrQReNbUm/k5/TYlnn24nXOmA+ezA7dTI3tYmpb2WcFUb44NjW+I9Qh5ooll8VgTDoCvBULtExaDoD79IQLEe4bKkBynqqLUnoPKIbxRCfeizoJr84BMCpuFEvuFLYcefZComvqDH6MQ92aArC2LkDmciSO6R0KbjareVVng2D/s/BO9+aJD83RTenDvDeJFGBTX9O60e3+r9Wr7r/Bx8Mwt4KoJ3K0xpFUWEkhMKfoH9XWalqS2BJww1jaFEuN82jRznWVCttOW6mfVqh8lE3B3PxPvEXJB0JdkSYA40u1yV51cQb+uY+PP6Vvvde3YgoxrCdXwbqNZHNQaxNXrk0GQ7wQlfVq3sKphIueIhK8SNTDo0JV2UgAAR1WD6NpvqqScXF8aRuFlRkOLn0uNp4XcCh8LegS6HfqBvpjwn2Q0bwTD8CgucUJFtXMD4=
   file: MessageThrottleKit.framework.zip
-  skip_cleanup: true
   on:
     repo: yulingtianxia/MessageThrottle
     tags: true
