@@ -22,4 +22,3 @@ deploy:
   file: MessageThrottleKit.framework.zip
   on:
     repo: yulingtianxia/MessageThrottle
-    tags: true
