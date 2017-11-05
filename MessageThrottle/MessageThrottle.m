@@ -337,7 +337,8 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
     if ([slf respondsToSelector:origForwardSelector]) {
         NSMethodSignature *methodSignature = [slf methodSignatureForSelector:origForwardSelector];
         if (!methodSignature) {
-            NSCAssert(NO, [NSString stringWithFormat:@"unrecognized selector -%@ for instance %@", NSStringFromSelector(origForwardSelector), slf]);
+            NSString *assertLog = [NSString stringWithFormat:@"unrecognized selector -%@ for instance %@", NSStringFromSelector(origForwardSelector), slf];
+            NSCAssert(NO, assertLog);
             return;
         }
         NSInvocation *forwardInv= [NSInvocation invocationWithMethodSignature:methodSignature];
