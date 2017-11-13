@@ -11,6 +11,16 @@
 #import <objc/message.h>
 #import <pthread.h>
 
+static inline BOOL mt_object_isClass(id _Nullable obj)
+{
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_8_0
+    return object_isClass(obj);
+#else
+    if (!obj) return NO;
+    return obj == [obj class];
+#endif
+}
+
 Class mt_metaClass(Class cls)
 {
     if (class_isMetaClass(cls)) {
@@ -83,8 +93,8 @@ static pthread_mutex_t mutex;
     if (mt_checkRuleValid(rule)) {
         [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
             if (rule.selector == obj.selector
-                && object_isClass(rule.target)
-                && object_isClass(obj.target)) {
+                && mt_object_isClass(rule.target)
+                && mt_object_isClass(obj.target)) {
                 Class clsA = rule.target;
                 Class clsB = obj.target;
                 shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
@@ -129,7 +139,7 @@ static BOOL mt_checkRuleValid(MTRule *rule)
             return NO;
         }
         Class cls;
-        if (object_isClass(rule.target)) {
+        if (mt_object_isClass(rule.target)) {
             cls = rule.target;
         }
         else {
@@ -147,7 +157,7 @@ static BOOL mt_checkRuleValid(MTRule *rule)
 static NSString * mt_methodDescription(id target, SEL selector)
 {
     NSString *selectorName = NSStringFromSelector(selector);
-    if (object_isClass(target)) {
+    if (mt_object_isClass(target)) {
         NSString *className = NSStringFromClass(target);
         return [NSString stringWithFormat:@"%@ [%@ %@]", class_isMetaClass(target) ? @"+" : @"-", className, selectorName];
     }
@@ -237,7 +247,7 @@ static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocatio
 static void mt_overrideMethod(id target, SEL selector)
 {
     Class cls;
-    if (object_isClass(target)) {
+    if (mt_object_isClass(target)) {
         cls = target;
     }
     else {
@@ -296,7 +306,7 @@ static void mt_overrideMethod(id target, SEL selector)
 static void mt_recoverMethod(id target, SEL selector)
 {
     Class cls;
-    if (object_isClass(target)) {
+    if (mt_object_isClass(target)) {
         cls = target;
     }
     else {
