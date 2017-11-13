@@ -13,11 +13,12 @@
 
 static inline BOOL mt_object_isClass(id _Nullable obj)
 {
-    if (@available(iOS 8.0, macOS 10.10, tvOS 9.0, watchOS 2.0, *)) {
-        return object_isClass(obj);
-    }
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_8_0 || __TV_OS_VERSION_MIN_REQUIRED >= __TVOS_9_0 || __WATCH_OS_VERSION_MIN_REQUIRED >= __WATCHOS_2_0 || __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_10
+    return object_isClass(obj);
+#else
     if (!obj) return NO;
     return obj == [obj class];
+#endif
 }
 
 Class mt_metaClass(Class cls)
