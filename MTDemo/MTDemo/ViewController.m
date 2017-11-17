@@ -14,6 +14,8 @@
 
 @interface ViewController ()
 
+@property (nonatomic) Stub *stub;
+
 @end
 
 @implementation ViewController
@@ -22,15 +24,20 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    Stub *s = [Stub new];
+    self.stub = [Stub new];
     
-    MTRule *rule = [MTRule new];
-    rule.target = s;
-    rule.selector = @selector(foo:);
-    rule.durationThreshold = 2;
-    rule.mode = MTPerformModeDebounce;
-    rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-
+//    MTRule *rule = [MTRule new];
+//    rule.target = self.stub;
+//    rule.selector = @selector(foo:);
+//    rule.durationThreshold = 1;
+//    rule.mode = MTPerformModeDebounce;
+//    rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+//
+//    [MTEngine.defaultEngine applyRule:rule];
+    
+    // 跟上面的用法等价
+    [self.stub limitSelector:@selector(foo:) oncePerDuration:1 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+    
 //    MTRule *rule1 = [MTRule new];
 //    rule1.target = Stub.class;
 //    rule1.selector = @selector(foo:);
@@ -38,8 +45,8 @@
 //    rule1.mode = MTPerformModeDebounce;
 //    rule1.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-    [MTEngine.defaultEngine applyRule:rule];
-    [s foo:[NSDate date]];
+    
+    
 //    [MTEngine.defaultEngine applyRule:rule1];
 //
 //    [MTEngine.defaultEngine discardRule:rule];
@@ -55,6 +62,8 @@
 //            }
 //        }
 //    });
+    
+//    Test Case For MTPerformModeDebounce
 //    __block NSTimeInterval lastTime = 0;
 //    __block NSTimeInterval value = 1;
 //    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -79,17 +88,7 @@
 }
 
 - (IBAction)tapFoo:(UIButton *)sender {
-    Stub *s = [Stub new];
-    
-    MTRule *rule = [MTRule new];
-    rule.target = s;
-    rule.selector = @selector(foo:);
-    rule.durationThreshold = 2;
-    [MTEngine.defaultEngine applyRule:rule];
-    [s foo:[NSDate date]];
-    for (MTRule *perRule in MTEngine.defaultEngine.allRules) {
-        NSLog(@"rule.target:%@", perRule.target);
-    }
+    [self.stub foo:[NSDate date]];
 }
 
 - (void)didReceiveMemoryWarning {

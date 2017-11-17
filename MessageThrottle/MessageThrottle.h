@@ -61,6 +61,10 @@ Class mt_metaClass(Class cls);
  */
 @property (nonatomic) dispatch_queue_t messageQueue;
 
+- (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold NS_DESIGNATED_INITIALIZER;
+
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
+
 @end
 
 @interface MTEngine : NSObject
@@ -83,6 +87,71 @@ Class mt_metaClass(Class cls);
  @return 废除成功返回 YES；如果规则不存在或不合法，则返回 NO
  */
 - (BOOL)discardRule:(MTRule *)rule;
+
+@end
+
+@interface NSObject (MessageThrottle)
+
+
+/**
+ 对实例对象的方法调用防抖（Debounce）限频，主队列执行
+
+ @param selector 限频的方法
+ @param durationThreshold 限频的阈值
+ @return 规则句柄
+ */
+- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold;
+
+/**
+ 对实例对象的方法调用限频，主队列执行
+
+ @param selector 限频的方法
+ @param durationThreshold 限频的阈值
+ @param mode 限频模式
+ @return 规则句柄
+ */
+- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode;
+
+/**
+ 对实例对象的方法调用限频
+
+ @param selector 限频的方法
+ @param durationThreshold 限频的阈值
+ @param mode 限频模式
+ @param messageQueue 延时执行方法的队列
+ @return 规则句柄
+ */
+- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
+
+/**
+ 对类的方法调用防抖（Debounce）限频，主队列执行
+ 
+ @param selector 限频的方法
+ @param durationThreshold 限频的阈值
+ @return 规则句柄
+ */
++ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold;
+
+/**
+ 对类的方法调用限频，主队列执行
+ 
+ @param selector 限频的方法
+ @param durationThreshold 限频的阈值
+ @param mode 限频模式
+ @return 规则句柄
+ */
++ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode;
+
+/**
+ 对类的方法限频
+ 
+ @param selector 限频的方法
+ @param durationThreshold 限频的阈值
+ @param mode 限频模式
+ @param messageQueue 延时执行方法的队列
+ @return 规则句柄
+ */
++ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
 
 @end
 

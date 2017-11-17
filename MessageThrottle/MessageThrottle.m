@@ -11,6 +11,10 @@
 #import <objc/message.h>
 #import <pthread.h>
 
+#if !__has_feature(objc_arc)
+#error
+#endif
+
 static inline BOOL mt_object_isClass(id _Nullable obj)
 {
 #if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_8_0 || __TV_OS_VERSION_MIN_REQUIRED >= __TVOS_9_0 || __WATCH_OS_VERSION_MIN_REQUIRED >= __WATCHOS_2_0 || __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_10
@@ -37,6 +41,20 @@ Class mt_metaClass(Class cls)
 @end
 
 @implementation MTRule
+
+- (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold
+{
+    self = [super init];
+    if (self) {
+        _target = target;
+        _selector = selector;
+        _durationThreshold = durationThreshold;
+        _mode = MTPerformModeDebounce;
+        _lastTimeRequest = 0;
+        _messageQueue = dispatch_get_main_queue();
+    }
+    return self;
+}
 
 - (instancetype)init
 {
@@ -370,3 +388,44 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
 
 @end
 
+@implementation NSObject (MessageThrottle)
+
+- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
+{
+    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:MTPerformModeDebounce];
+}
+
+- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
+{
+    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:dispatch_get_main_queue()];
+}
+
+- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
+{
+    MTRule *rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
+    rule.mode = mode;
+    rule.messageQueue = messageQueue;
+    [MTEngine.defaultEngine applyRule:rule];
+    return rule;
+}
+
++ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
+{
+    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:MTPerformModeDebounce];
+}
+
++ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
+{
+    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:dispatch_get_main_queue()];
+}
+
++ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
+{
+    MTRule *rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
+    rule.mode = mode;
+    rule.messageQueue = messageQueue;
+    [MTEngine.defaultEngine applyRule:rule];
+    return rule;
+}
+
+@end
