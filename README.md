@@ -8,20 +8,24 @@
 
 MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. For a visual explaination of the differences between throttling and debouncing, [see this demo](http://demo.nimius.net/debounce_throttle/).
 
-## Article
+## 📚 Article
 
 - [Objective-C Message Throttle and Debounce](http://yulingtianxia.com/blog/2017/11/05/Objective-C-Message-Throttle-and-Debounce/)
 
-## Why MessageThrottle
+## 🌟 Features
 
+- [x] Easy to use.
+- [x] Keep your code clear
+- [x] Reserve the whole arguments.
 - [x] Support instance, class and meta class.
 - [x] Support 3 modes: Throttle(Firstly), Throttle(Last) and Debounce.
-- [x] Reserve the whole arguments.
-- [x] Keep your code clear
 - [x] Centralized management of rules.
-- [x] Easy to use.
 
-## Usage
+## 🔮 Example
+
+To run the example project, clone the repo and run MTDemo target.
+
+## 🐒 How to use
 
 The following example shows how to restrict the frequency of forwarding `- [ViewController foo:]` message to 10 times per second.
 
@@ -92,7 +96,7 @@ When using `MTModePerformLast` or `MTModePerformDebounce`, you can designate a d
 
 `MTEngine` is a singleton class. It manages all rules of message throttles. You can use `applyRule:` method to apply a rule or update an old rule that already exists. Using it's `discardRule:` method to discardRule a rule. There is also a readonly property `allRules` for obtaining all rules in current application. 
 
-## Installation
+## 📲 Installation
 
 ### CocoaPods
 
@@ -145,18 +149,18 @@ Run `carthage update` to build the framework and drag the built `MessageThrottle
 
 Just drag the "MessageThrottle" document folder into your project.
 
-## Contributing
+## ❤️ Contributed
 
 - If you **need help** or you'd like to **ask a general question**, open an issue.
 - If you **found a bug**, open an issue.
 - If you **have a feature request**, open an issue.
 - If you **want to contribute**, submit a pull request.
 
-## Author
+## 👨🏻‍💻 Author
 
 yulingtianxia, yulingtianxia@gmail.com
 
-## License
+## 👮🏻 License
 
 MessageThrottle is available under the MIT license. See the LICENSE file for more info.
 
