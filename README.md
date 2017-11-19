@@ -37,8 +37,14 @@ rule.durationThreshold = 0.01;
 Or you can also use another shorter code:
 
 ```
-[s limitSelector:@selector(foo:) oncePerDuration:0.01]; // returns MTRule instance
+MTRule *rule = [s limitSelector:@selector(foo:) oncePerDuration:0.01]; // returns MTRule instance
 ``` 
+
+You should call `discard` method When you don't need limit `foo:` method.
+
+```
+[rule discard];
+```
 
 `MTRule` represents the rule of a message throttle, which contains strategy and frequency of sending messages. 
 
