@@ -65,6 +65,20 @@ Class mt_metaClass(Class cls);
 
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
+/**
+ 应用规则，会覆盖已有的规则
+ 
+ @return 更新成功返回 YES；如果规则不合法或继承链上已有相同 selector 的规则，则返回 NO
+ */
+- (BOOL)apply;
+
+/**
+ 废除规则
+ 
+ @return 废除成功返回 YES；如果规则不存在或不合法，则返回 NO
+ */
+- (BOOL)discard;
+
 @end
 
 @interface MTEngine : NSObject

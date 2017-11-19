@@ -8,6 +8,19 @@
 
 MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. For a visual explaination of the differences between throttling and debouncing, [see this demo](http://demo.nimius.net/debounce_throttle/).
 
+## Article
+
+- [Objective-C Message Throttle and Debounce](http://yulingtianxia.com/blog/2017/11/05/Objective-C-Message-Throttle-and-Debounce/)
+
+## Why MessageThrottle
+
+- [x] Support instance, class and meta class.
+- [x] Support 3 modes: Throttle(Firstly), Throttle(Last) and Debounce.
+- [x] Reserve the whole arguments.
+- [x] Keep your code clear
+- [x] Centralized management of rules.
+- [x] Easy to use.
+
 ## Usage
 
 The following example shows how to restrict the frequency of forwarding `- [ViewController foo:]` message to 10 times per second.
@@ -18,7 +31,7 @@ MTRule *rule = [MTRule new];
 rule.target = s; // You can also assign `Stub.class` or `mt_metaClass(Stub.class)`
 rule.selector = @selector(foo:);
 rule.durationThreshold = 0.01;
-[MTEngine.defaultEngine applyRule:rule];
+[MTEngine.defaultEngine applyRule:rule]; // or use `[rule apply]`
 ```
 
 Or you can also use another shorter code:
@@ -31,7 +44,7 @@ Or you can also use another shorter code:
 
 You can assign an instance or (meta)class to `target` property. When you assign an instance to `target`, MessageThrottle will only restrict messages send to this instance. If you want to restrict a class method, just using `mt_metaClass()` to get it's meta class, and assign the meta class to `target`. Rules with instance `target` won't conflict with each other, and have a higher priority than rules with class `target`.
 
-`MTRule` also define the mode of performing selector. There are three modes defined in `MTMode`: `MTModePerformFirstly`, `MTModePerformLast` and `MTModePerformDebounce`. 
+`MTRule` also define the mode of performing selector. There are three modes defined in `MTMode`: `MTModePerformFirstly`, `MTModePerformLast` and `MTModePerformDebounce`. [This demo](http://demo.nimius.net/debounce_throttle/) shows the difference between throttle and debounce.
 
 The default mode is `MTModePerformDebounce`. `MTModePerformDebounce` will restart timer when another message arrives during `durationThreshold`. So there must be a delay of `durationThreshold` at least. 
 
@@ -132,10 +145,6 @@ Just drag the "MessageThrottle" document folder into your project.
 - If you **found a bug**, open an issue.
 - If you **have a feature request**, open an issue.
 - If you **want to contribute**, submit a pull request.
-
-## Article
-
-- [Objective-C Message Throttle and Debounce](http://yulingtianxia.com/blog/2017/11/05/Objective-C-Message-Throttle-and-Debounce/)
 
 ## Author
 

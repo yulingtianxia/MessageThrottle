@@ -67,6 +67,16 @@ Class mt_metaClass(Class cls)
     return self;
 }
 
+- (BOOL)apply
+{
+    return [MTEngine.defaultEngine applyRule:self];
+}
+
+- (BOOL)discard
+{
+    return [MTEngine.defaultEngine discardRule:self];
+}
+
 @end
 
 @interface MTEngine ()
