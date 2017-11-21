@@ -37,7 +37,7 @@ Class mt_metaClass(Class cls);
 @interface MTRule : NSObject
 
 /**
- target, 可以为实例，类，元类
+ target, 可以为实例，类，元类(可以使用 mt_metaClass 函数获取元类）
  */
 @property (nonatomic, weak) id target;
 
