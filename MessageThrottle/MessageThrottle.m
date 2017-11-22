@@ -127,8 +127,7 @@ static pthread_mutex_t mutex;
                 Class clsB = obj.target;
                 shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
                 *stop = shouldApply;
-                NSString *errorDescription = [NSString stringWithFormat:@"Error: %@ already apply rule in %@. A message can only have one throttle per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB)];
-                NSLog(@"%@", errorDescription);
+                NSCAssert(NO, @"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB));
             }
         }];
         
@@ -378,8 +377,7 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
     if ([slf respondsToSelector:origForwardSelector]) {
         NSMethodSignature *methodSignature = [slf methodSignatureForSelector:origForwardSelector];
         if (!methodSignature) {
-            NSString *assertLog = [NSString stringWithFormat:@"unrecognized selector -%@ for instance %@", NSStringFromSelector(origForwardSelector), slf];
-            NSCAssert(NO, assertLog);
+            NSCAssert(NO, @"unrecognized selector -%@ for instance %@", NSStringFromSelector(origForwardSelector), slf);
             return;
         }
         NSInvocation *forwardInv= [NSInvocation invocationWithMethodSignature:methodSignature];
@@ -400,36 +398,28 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
 
 @implementation NSObject (MessageThrottle)
 
-- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
+- (NSArray<MTRule *> *)mt_allRules
 {
-    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:MTPerformModeDebounce];
+    NSMutableArray<MTRule *> *result = [NSMutableArray array];
+    for (MTRule *rule in MTEngine.defaultEngine.allRules) {
+        if (rule.target == self || object_getClass(self) == rule.target) {
+            [result addObject:rule];
+        }
+    }
+    return [result copy];
 }
 
-- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
+- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
 {
-    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:dispatch_get_main_queue()];
+    return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:MTPerformModeDebounce];
 }
 
-- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
+- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
 {
-    MTRule *rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
-    rule.mode = mode;
-    rule.messageQueue = messageQueue;
-    [MTEngine.defaultEngine applyRule:rule];
-    return rule;
+    return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:dispatch_get_main_queue()];
 }
 
-+ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
-{
-    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:MTPerformModeDebounce];
-}
-
-+ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
-{
-    return [self limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:dispatch_get_main_queue()];
-}
-
-+ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
+- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
 {
     MTRule *rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
     rule.mode = mode;

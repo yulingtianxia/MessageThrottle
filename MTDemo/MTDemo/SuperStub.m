@@ -14,4 +14,8 @@
     NSLog(@"SuperStub foo: %@", arg);
 }
 
++ (void)foo:(NSDate *)arg {
+    NSLog(@"SuperStub foo: %@", arg);
+}
+
 @end

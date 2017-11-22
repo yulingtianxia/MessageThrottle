@@ -106,66 +106,37 @@ Class mt_metaClass(Class cls);
 
 @interface NSObject (MessageThrottle)
 
+@property (nonatomic, readonly) NSArray<MTRule *> *mt_allRules;
 
 /**
- 对实例对象的方法调用防抖（Debounce）限频，主队列执行
+ 对方法调用防抖（Debounce）限频，主队列执行
 
  @param selector 限频的方法
  @param durationThreshold 限频的阈值
  @return 规则句柄
  */
-- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold;
+- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold;
 
 /**
- 对实例对象的方法调用限频，主队列执行
+ 对方法调用限频，主队列执行
 
- @param selector 限频的方法
- @param durationThreshold 限频的阈值
- @param mode 限频模式
- @return 规则句柄
- */
-- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode;
-
-/**
- 对实例对象的方法调用限频
-
- @param selector 限频的方法
- @param durationThreshold 限频的阈值
- @param mode 限频模式
- @param messageQueue 延时执行方法的队列
- @return 规则句柄
- */
-- (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
-
-/**
- 对类的方法调用防抖（Debounce）限频，主队列执行
- 
- @param selector 限频的方法
- @param durationThreshold 限频的阈值
- @return 规则句柄
- */
-+ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold;
-
-/**
- 对类的方法调用限频，主队列执行
- 
  @param selector 限频的方法
  @param durationThreshold 限频的阈值
  @param mode 限频模式
  @return 规则句柄
  */
-+ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode;
+- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode;
 
 /**
- 对类的方法限频
- 
+ 对方法调用限频
+
  @param selector 限频的方法
  @param durationThreshold 限频的阈值
  @param mode 限频模式
  @param messageQueue 延时执行方法的队列
  @return 规则句柄
  */
-+ (MTRule *)limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
+- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
 
 @end
 

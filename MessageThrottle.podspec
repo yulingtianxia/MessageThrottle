@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 s.name         = "MessageThrottle"
-s.version      = "1.0.4"
-s.summary      = "A lightweight message throttle."
+s.version      = "1.0.5"
+s.summary      = "A lightweight Objective-C message throttle and debounce library."
 s.description  = <<-DESC
 MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. 
 DESC

@@ -12,5 +12,6 @@
 @interface Stub : SuperStub
 
 - (void)foo:(NSDate *)arg;
++ (void)foo:(NSDate *)arg;
 
 @end
