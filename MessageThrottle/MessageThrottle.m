@@ -136,6 +136,9 @@ static pthread_mutex_t mutex;
             mt_overrideMethod(rule.target, rule.selector);
         }
     }
+    else {
+        shouldApply = NO;
+    }
     pthread_mutex_unlock(&mutex);
     return shouldApply;
 }
