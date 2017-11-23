@@ -11,9 +11,9 @@
 /**
  消息节流模式
 
- - MTPerformModeFirstly: 执行最靠前发送的消息，后面发送的消息会被忽略
- - MTPerformModeLast: 执行最靠后发送的消息，前面发送的消息会被忽略，执行时间会有延时
- - MTPerformModeDebounce: 消息发送后延迟一段时间执行，如果在这段时间内继续发送消息，则重新计时
+ - MTPerformModeFirstly: Throttle 模式：执行最靠前发送的消息，后面发送的消息会被忽略
+ - MTPerformModeLast: Throttle 模式：执行最靠后发送的消息，前面发送的消息会被忽略，执行时间会有延时
+ - MTPerformModeDebounce: Debounce 模式：消息发送后延迟一段时间执行，如果在这段时间内继续发送消息，则重新计时
  */
 typedef NS_ENUM(NSUInteger, MTPerformMode) {
     MTPerformModeFirstly,
