@@ -33,6 +33,18 @@ Class mt_metaClass(Class cls)
     return object_getClass(cls);
 }
 
+static NSString * mt_methodDescription(id target, SEL selector)
+{
+    NSString *selectorName = NSStringFromSelector(selector);
+    if (mt_object_isClass(target)) {
+        NSString *className = NSStringFromClass(target);
+        return [NSString stringWithFormat:@"%@ [%@ %@]", class_isMetaClass(target) ? @"+" : @"-", className, selectorName];
+    }
+    else {
+        return [NSString stringWithFormat:@"[%p %@]", target, selectorName];
+    }
+}
+
 @interface MTRule ()
 
 @property (nonatomic) NSTimeInterval lastTimeRequest;
@@ -182,18 +194,6 @@ static BOOL mt_checkRuleValid(MTRule *rule)
         return YES;
     }
     return NO;
-}
-
-static NSString * mt_methodDescription(id target, SEL selector)
-{
-    NSString *selectorName = NSStringFromSelector(selector);
-    if (mt_object_isClass(target)) {
-        NSString *className = NSStringFromClass(target);
-        return [NSString stringWithFormat:@"%@ [%@ %@]", class_isMetaClass(target) ? @"+" : @"-", className, selectorName];
-    }
-    else {
-        return [NSString stringWithFormat:@"[%p %@]", target, selectorName];
-    }
 }
 
 static SEL mt_aliasForSelector(Class cls, SEL selector)
@@ -412,23 +412,26 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
     return [result copy];
 }
 
-- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
 {
     return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:MTPerformModeDebounce];
 }
 
-- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
 {
     return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:dispatch_get_main_queue()];
 }
 
-- (MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
 {
-    MTRule *rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
+    MTRule *rule = MTEngine.defaultEngine.rules[mt_methodDescription(self, selector)];
+    if (!rule) {
+        rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
+    }
+    rule.durationThreshold = durationThreshold;
     rule.mode = mode;
     rule.messageQueue = messageQueue;
-    [MTEngine.defaultEngine applyRule:rule];
-    return rule;
+    return [rule apply] ? rule : nil;
 }
 
 @end
