@@ -1,10 +1,16 @@
-# MessageThrottle
+<p align="center">
+<a href="https://github.com/yulingtianxia/MessageThrottle">
+<img src="Assets/logo.png" alt="MessageThrottle" />
+</a>
+</p>
 
 [![CI Status](http://img.shields.io/travis/yulingtianxia/MessageThrottle.svg?style=flat)](https://travis-ci.org/yulingtianxia/MessageThrottle)
 [![Version](https://img.shields.io/cocoapods/v/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![License](https://img.shields.io/cocoapods/l/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
 [![Platform](https://img.shields.io/cocoapods/p/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
+
+# MessageThrottle
 
 MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. For a visual explaination of the differences between throttling and debouncing, [see this demo](http://demo.nimius.net/debounce_throttle/).
 
