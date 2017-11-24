@@ -33,22 +33,25 @@ To run the example project, clone the repo and run MTDemo target.
 
 ## 🐒 How to use
 
-The following example shows how to restrict the frequency of forwarding `- [ViewController foo:]` message to 10 times per second.
+The following example shows how to restrict the frequency of forwarding `- [ViewController foo:]` message to 100 times per second.
 
 ```
 Stub *s = [Stub new];
-MTRule *rule = [MTRule new];
-rule.target = s; // You can also assign `Stub.class` or `mt_metaClass(Stub.class)`
-rule.selector = @selector(foo:);
-rule.durationThreshold = 0.01;
-[MTEngine.defaultEngine applyRule:rule]; // or use `[rule apply]`
-```
-
-Or you can also use another shorter code:
-
-```
 MTRule *rule = [s limitSelector:@selector(foo:) oncePerDuration:0.01]; // returns MTRule instance
 ``` 
+
+For more control of rule, you can use `mt_limitSelector:oncePerDuration:usingMode:onMessageQueue:`.
+
+You can also start with a creation of `MTRule`:
+
+```
+Stub *s = [Stub new];
+// You can also assign `Stub.class` or `mt_metaClass(Stub.class)` to `target` argument.
+MTRule *rule = [[MTRule alloc] initWithTarget:s selector:@selector(foo:) durationThreshold:0.01];
+rule.mode = MTModePerformLast; // Or `MTModePerformFirstly`, ect
+rule.messageQueue = /** a dispatch queue you want, maybe `dispatch_get_main_queue()` whatever...*/
+[rule apply];
+```
 
 You should call `discard` method When you don't need limit `foo:` method.
 
