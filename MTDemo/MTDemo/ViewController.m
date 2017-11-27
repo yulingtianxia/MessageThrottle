@@ -15,6 +15,7 @@
 @interface ViewController ()
 
 @property (nonatomic) Stub *stub;
+@property (weak, nonatomic) IBOutlet UILabel *label;
 
 @end
 
@@ -22,7 +23,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleFooNotification:) name:MTStubFooNotification object:nil];
     
     self.stub = [Stub new];
     
@@ -99,5 +100,12 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (void)handleFooNotification:(NSNotification *)notification
+{
+    NSDate *date = notification.userInfo[@"arg"];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.label.text = [NSString stringWithFormat:@"Last Tap Date: %@", date.description];
+    });
+}
 
 @end

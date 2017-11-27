@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import "SuperStub.h"
 
+extern NSString * const MTStubFooNotification;
+
 @interface Stub : SuperStub
 
 - (void)foo:(NSDate *)arg;

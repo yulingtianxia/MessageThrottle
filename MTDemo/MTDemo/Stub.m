@@ -8,16 +8,20 @@
 
 #import "Stub.h"
 
+NSString * const MTStubFooNotification = @"MTStubFooNotification";
+
 @implementation Stub
 
 - (void)foo:(NSDate *)arg {
     [super foo:arg];
     NSLog(@"Stub foo: %@", arg);
+    [NSNotificationCenter.defaultCenter postNotificationName:MTStubFooNotification object:nil userInfo:@{@"arg" : arg}];
 }
 
 + (void)foo:(NSDate *)arg {
     [super foo:arg];
     NSLog(@"Stub foo: %@", arg);
+    [NSNotificationCenter.defaultCenter postNotificationName:MTStubFooNotification object:nil userInfo:@{@"arg" : arg}];
 }
 
 @end
