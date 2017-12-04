@@ -37,7 +37,7 @@
 //    [MTEngine.defaultEngine applyRule:rule];
     
     // 跟上面的用法等价
-    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:1 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.5 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
     NSArray<MTRule *> *rules = self.stub.mt_allRules;
     for (MTRule *rule in rules) {
         NSLog(@"%@", rule);
