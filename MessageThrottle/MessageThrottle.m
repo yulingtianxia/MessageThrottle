@@ -237,17 +237,15 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
             }
             break;
         case MTPerformModeLast:
+            invocation.selector = fixedSelector;
+            rule.lastInvocation = invocation;
+            [rule.lastInvocation retainArguments];
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
                 rule.lastTimeRequest = now;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
                     [rule.lastInvocation invoke];
                     rule.lastInvocation = nil;
                 });
-            }
-            else {
-                invocation.selector = fixedSelector;
-                rule.lastInvocation = invocation;
-                [rule.lastInvocation retainArguments];
             }
             break;
         case MTPerformModeDebounce:
