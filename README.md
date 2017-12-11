@@ -59,6 +59,8 @@ You should call `discard` method When you don't need limit `foo:` method.
 [rule discard];
 ```
 
+**NOTE: `MTRule` is self-managed. If the `target` of rule is a object instance, `MTRule` will discard itself automatically when the `target` is deallocated.**
+
 `MTRule` represents the rule of a message throttle, which contains strategy and frequency of sending messages. 
 
 You can assign an instance or (meta)class to `target` property. When you assign an instance to `target`, MessageThrottle will only restrict messages send to this instance. If you want to restrict a class method, just using `mt_metaClass()` to get it's meta class, and assign the meta class to `target`. Rules with instance `target` won't conflict with each other, and have a higher priority than rules with class `target`.

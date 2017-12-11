@@ -45,6 +45,24 @@ static NSString * mt_methodDescription(id target, SEL selector)
     }
 }
 
+@interface MTDealloc : NSObject
+
+@property (nonatomic, weak) MTRule *rule;
+@property (nonatomic, copy) NSString *methodDescription;
+@property (nonatomic) Class cls;
+
+@end
+
+@implementation MTDealloc
+
+- (void)dealloc
+{
+    SEL selector = NSSelectorFromString(@"discardRule:whenTargetDealloc:");
+    ((void (*)(id, SEL, MTRule *, MTDealloc *))[MTEngine.defaultEngine methodForSelector:selector])(MTEngine.defaultEngine, selector, self.rule, self);
+}
+
+@end
+
 @interface MTRule ()
 
 @property (nonatomic) NSTimeInterval lastTimeRequest;
@@ -68,17 +86,6 @@ static NSString * mt_methodDescription(id target, SEL selector)
     return self;
 }
 
-- (instancetype)init
-{
-    self = [super init];
-    if (self) {
-        _mode = MTPerformModeDebounce;
-        _lastTimeRequest = 0;
-        _messageQueue = dispatch_get_main_queue();
-    }
-    return self;
-}
-
 - (BOOL)apply
 {
     return [MTEngine.defaultEngine applyRule:self];
@@ -94,6 +101,8 @@ static NSString * mt_methodDescription(id target, SEL selector)
 @interface MTEngine ()
 
 @property (nonatomic) NSMutableDictionary<NSString *, MTRule *> *rules;
+
+- (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc;
 
 @end
 
@@ -132,7 +141,7 @@ static pthread_mutex_t mutex;
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
-            if (rule.selector == obj.selector
+            if (sel_isEqual(rule.selector, obj.selector)
                 && mt_object_isClass(rule.target)
                 && mt_object_isClass(obj.target)) {
                 Class clsA = rule.target;
@@ -146,6 +155,7 @@ static pthread_mutex_t mutex;
         if (shouldApply) {
             self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
             mt_overrideMethod(rule.target, rule.selector);
+            mt_discardRuleWhenTargetDealloc(rule);
         }
     }
     else {
@@ -169,6 +179,21 @@ static pthread_mutex_t mutex;
     }
     pthread_mutex_unlock(&mutex);
     return shouldDiscard;
+}
+
+- (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc
+{
+    pthread_mutex_lock(&mutex);
+    
+    NSString *description = mtDealloc.methodDescription;
+    if (self.rules[description] != nil) {
+        self.rules[description] = nil;
+        if (MTEngine.defaultEngine.rules[mt_methodDescription(mtDealloc.cls, rule.selector)]) {
+            return;
+        }
+        mt_revertHook(mtDealloc.cls, rule.selector);
+    }
+    pthread_mutex_unlock(&mutex);
 }
 
 #pragma mark - Private Helper
@@ -334,19 +359,8 @@ static void mt_overrideMethod(id target, SEL selector)
     class_replaceMethod(cls, selector, msgForwardIMP, originType);
 }
 
-static void mt_recoverMethod(id target, SEL selector)
+static void mt_revertHook(Class cls, SEL selector)
 {
-    Class cls;
-    if (mt_object_isClass(target)) {
-        cls = target;
-    }
-    else {
-        cls = object_getClass(target);
-        if (MTEngine.defaultEngine.rules[mt_methodDescription(cls, selector)]) {
-            return;
-        }
-    }
-    
     if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) == (IMP)mt_forwardInvocation) {
         IMP originalForwardImp = class_getMethodImplementation(cls, NSSelectorFromString(MTForwardInvocationSelectorName));
         if (originalForwardImp) {
@@ -363,12 +377,27 @@ static void mt_recoverMethod(id target, SEL selector)
         return;
     }
     const char *originType = (char *)method_getTypeEncoding(originMethod);
- 
+    
     SEL fixedOriginalSelector = mt_aliasForSelector(cls, selector);
     if (class_respondsToSelector(cls, fixedOriginalSelector)) {
         IMP originalImp = class_getMethodImplementation(cls, fixedOriginalSelector);
         class_replaceMethod(cls, selector, originalImp, originType);
     }
+}
+
+static void mt_recoverMethod(id target, SEL selector)
+{
+    Class cls;
+    if (mt_object_isClass(target)) {
+        cls = target;
+    }
+    else {
+        cls = object_getClass(target);
+        if (MTEngine.defaultEngine.rules[mt_methodDescription(cls, selector)]) {
+            return;
+        }
+    }
+    mt_revertHook(cls, selector);
 }
 
 static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
@@ -392,6 +421,26 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
         void (*superForwardIMP)(id, SEL, NSInvocation *);
         superForwardIMP = (void (*)(id, SEL, NSInvocation *))method_getImplementation(superForwardMethod);
         superForwardIMP(slf, @selector(forwardInvocation:), invocation);
+    }
+}
+
+const void *kMTDeallocKey = &kMTDeallocKey;
+
+static void mt_discardRuleWhenTargetDealloc(MTRule *rule)
+{
+    if (mt_object_isClass(rule.target)) {
+        return;
+    }
+    else {
+        Class cls = object_getClass(rule.target);
+        MTDealloc *mtDealloc = objc_getAssociatedObject(rule.target, kMTDeallocKey);
+        if (!mtDealloc) {
+            mtDealloc = [MTDealloc new];
+            mtDealloc.rule = rule;
+            mtDealloc.methodDescription = mt_methodDescription(rule.target, rule.selector);
+            mtDealloc.cls = cls;
+            objc_setAssociatedObject(rule.target, kMTDeallocKey, mtDealloc, OBJC_ASSOCIATION_RETAIN);
+        }
     }
 }
 

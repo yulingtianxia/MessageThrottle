@@ -39,12 +39,12 @@ Class mt_metaClass(Class cls);
 /**
  target, 可以为实例，类，元类(可以使用 mt_metaClass 函数获取元类）
  */
-@property (nonatomic, weak) id target;
+@property (nonatomic, weak, readonly) id target;
 
 /**
  节流消息的 SEL
  */
-@property (nonatomic) SEL selector;
+@property (nonatomic, readonly) SEL selector;
 
 /**
  消息节流时间的阈值，单位：秒
@@ -63,7 +63,7 @@ Class mt_metaClass(Class cls);
 
 - (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold NS_DESIGNATED_INITIALIZER;
 
-- (instancetype)init NS_DESIGNATED_INITIALIZER;
+- (instancetype)init NS_UNAVAILABLE;
 
 /**
  应用规则，会覆盖已有的规则
