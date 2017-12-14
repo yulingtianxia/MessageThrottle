@@ -155,7 +155,7 @@ static pthread_mutex_t mutex;
         if (shouldApply) {
             self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
             mt_overrideMethod(rule.target, rule.selector);
-            mt_discardRuleWhenTargetDealloc(rule);
+            mt_configureTargetDealloc(rule);
         }
     }
     else {
@@ -424,22 +424,20 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
     }
 }
 
-const void *kMTDeallocKey = &kMTDeallocKey;
-
-static void mt_discardRuleWhenTargetDealloc(MTRule *rule)
+static void mt_configureTargetDealloc(MTRule *rule)
 {
     if (mt_object_isClass(rule.target)) {
         return;
     }
     else {
         Class cls = object_getClass(rule.target);
-        MTDealloc *mtDealloc = objc_getAssociatedObject(rule.target, kMTDeallocKey);
+        MTDealloc *mtDealloc = objc_getAssociatedObject(rule.target, rule.selector);
         if (!mtDealloc) {
             mtDealloc = [MTDealloc new];
             mtDealloc.rule = rule;
             mtDealloc.methodDescription = mt_methodDescription(rule.target, rule.selector);
             mtDealloc.cls = cls;
-            objc_setAssociatedObject(rule.target, kMTDeallocKey, mtDealloc, OBJC_ASSOCIATION_RETAIN);
+            objc_setAssociatedObject(rule.target, rule.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
         }
     }
 }

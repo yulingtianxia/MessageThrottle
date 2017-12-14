@@ -17,6 +17,7 @@ MessageThrottle is a lightweight, simple library for controlling frequency of fo
 ## 📚 Article
 
 - [Objective-C Message Throttle and Debounce](http://yulingtianxia.com/blog/2017/11/05/Objective-C-Message-Throttle-and-Debounce/)
+- [Associated Object and Dealloc](http://yulingtianxia.com/blog/2017/12/15/Associated-Object-and-Dealloc/)
 
 ## 🌟 Features
 
@@ -26,6 +27,7 @@ MessageThrottle is a lightweight, simple library for controlling frequency of fo
 - [x] Support instance, class and meta class.
 - [x] Support 3 modes: Throttle(Firstly), Throttle(Last) and Debounce.
 - [x] Centralized management of rules.
+- [x] Self-managed rules.
 
 ## 🔮 Example
 
