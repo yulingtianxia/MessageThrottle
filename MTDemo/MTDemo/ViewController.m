@@ -47,7 +47,6 @@
 
 - (IBAction)tapFoo:(UIButton *)sender {
     [self.stub foo:[NSDate date]];
-    MTEngine.defaultEngine.allRules;
 }
 
 - (void)didReceiveMemoryWarning {
