@@ -141,14 +141,14 @@ static pthread_mutex_t mutex;
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
-            if (sel_isEqual(rule.selector, obj.selector)
-                && mt_object_isClass(rule.target)
-                && mt_object_isClass(obj.target)) {
-                Class clsA = rule.target;
-                Class clsB = obj.target;
+            if (sel_isEqual(rule.selector, obj.selector)) {
+                
+                Class clsA = mt_classOfTarget(rule.target);
+                Class clsB = mt_classOfTarget(obj.target);
+
                 shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
                 *stop = shouldApply;
-                NSCAssert(NO, @"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB));
+                NSCAssert(shouldApply, @"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB));
             }
         }];
         
@@ -205,13 +205,7 @@ static BOOL mt_checkRuleValid(MTRule *rule)
         if ([selectorName isEqualToString:@"forwardInvocation:"]) {
             return NO;
         }
-        Class cls;
-        if (mt_object_isClass(rule.target)) {
-            cls = rule.target;
-        }
-        else {
-            cls = object_getClass(rule.target);
-        }
+        Class cls = mt_classOfTarget(rule.target);
         NSString *className = NSStringFromClass(cls);
         if ([className isEqualToString:@"MTRule"] || [className isEqualToString:@"MTEngine"]) {
             return NO;
@@ -300,7 +294,7 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
 
 static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";
 
-static void mt_overrideMethod(id target, SEL selector)
+static Class mt_classOfTarget(id target)
 {
     Class cls;
     if (mt_object_isClass(target)) {
@@ -309,6 +303,12 @@ static void mt_overrideMethod(id target, SEL selector)
     else {
         cls = object_getClass(target);
     }
+    return cls;
+}
+
+static void mt_overrideMethod(id target, SEL selector)
+{
+    Class cls = mt_classOfTarget(target);
     
     Method originMethod = class_getInstanceMethod(cls, selector);
     if (!originMethod) {
