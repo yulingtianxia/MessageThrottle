@@ -9,6 +9,9 @@
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![License](https://img.shields.io/cocoapods/l/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
 [![Platform](https://img.shields.io/cocoapods/p/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
+[![CocoaPods](https://img.shields.io/cocoapods/dt/MessageThrottle.svg)](http://cocoapods.org/pods/MessageThrottle)
+[![CocoaPods](https://img.shields.io/cocoapods/at/MessageThrottle.svg)](http://cocoapods.org/pods/MessageThrottle)
+[![Twitter Follow](https://img.shields.io/twitter/follow/yulingtianxia.svg?style=social&label=Follow)](https://twitter.com/yulingtianxia)
 
 # MessageThrottle
 
