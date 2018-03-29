@@ -141,11 +141,11 @@ static pthread_mutex_t mutex;
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
-            if (sel_isEqual(rule.selector, obj.selector)) {
-                
-                Class clsA = mt_classOfTarget(rule.target);
-                Class clsB = mt_classOfTarget(obj.target);
-
+            if (sel_isEqual(rule.selector, obj.selector)
+                && mt_object_isClass(rule.target)
+                && mt_object_isClass(obj.target)) {
+                Class clsA = rule.target;
+                Class clsB = obj.target;
                 shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
                 *stop = shouldApply;
                 NSCAssert(shouldApply, @"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB));
