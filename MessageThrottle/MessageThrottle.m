@@ -45,6 +45,44 @@ static NSString * mt_methodDescription(id target, SEL selector)
     }
 }
 
+enum {
+    BLOCK_HAS_COPY_DISPOSE =  (1 << 25),
+    BLOCK_HAS_CTOR =          (1 << 26), // helpers have C++ code
+    BLOCK_IS_GLOBAL =         (1 << 28),
+    BLOCK_HAS_STRET =         (1 << 29), // IFF BLOCK_HAS_SIGNATURE
+    BLOCK_HAS_SIGNATURE =     (1 << 30),
+};
+
+struct _MTBlockDescriptor
+{
+    unsigned long reserved;
+    unsigned long size;
+    void *rest[1];
+};
+
+struct _MTBlock
+{
+    void *isa;
+    int flags;
+    int reserved;
+    void *invoke;
+    struct _MTBlockDescriptor *descriptor;
+};
+
+static const char * mt_blockMethodSignature(id blockObj)
+{
+    struct _MTBlock *block = (__bridge void *)blockObj;
+    struct _MTBlockDescriptor *descriptor = block->descriptor;
+    
+    assert(block->flags & BLOCK_HAS_SIGNATURE);
+    
+    int index = 0;
+    if(block->flags & BLOCK_HAS_COPY_DISPOSE)
+        index += 2;
+    
+    return descriptor->rest[index];
+}
+
 @interface MTDealloc : NSObject
 
 @property (nonatomic, weak) MTRule *rule;
@@ -222,6 +260,48 @@ static SEL mt_aliasForSelector(Class cls, SEL selector)
     return fixedOriginalSelector;
 }
 
+static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
+{
+    if (!rule.messageFilterBlock) {
+        return NO;
+    }
+    NSMethodSignature *filterBlockSignature = [NSMethodSignature signatureWithObjCTypes:mt_blockMethodSignature(rule.messageFilterBlock)];
+    NSInvocation *blockInvocation = [NSInvocation invocationWithMethodSignature:filterBlockSignature];
+    NSUInteger numberOfArguments = filterBlockSignature.numberOfArguments;
+    
+    if (numberOfArguments > originalInvocation.methodSignature.numberOfArguments) {
+        NSLog(@"Block has too many arguments. Not calling %@", rule);
+        return NO;
+    }
+    
+    if (numberOfArguments > 1) {
+        [blockInvocation setArgument:&rule atIndex:1];
+    }
+    
+    void *argBuf = NULL;
+    for (NSUInteger idx = 2; idx < numberOfArguments; idx++) {
+        const char *type = [originalInvocation.methodSignature getArgumentTypeAtIndex:idx];
+        NSUInteger argSize;
+        NSGetSizeAndAlignment(type, &argSize, NULL);
+        
+        if (!(argBuf = reallocf(argBuf, argSize))) {
+            NSLog(@"Failed to allocate memory for block invocation.");
+            return NO;
+        }
+        
+        [originalInvocation getArgument:argBuf atIndex:idx];
+        [blockInvocation setArgument:argBuf atIndex:idx];
+    }
+    
+    [blockInvocation invokeWithTarget:rule.messageFilterBlock];
+    BOOL returnedValue = NO;
+    [blockInvocation getReturnValue:&returnedValue];
+    if (argBuf != NULL) {
+        free(argBuf);
+    }
+    return returnedValue;
+}
+
 /**
  处理执行 NSInvocation
 
@@ -238,14 +318,13 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
         rule = MTEngine.defaultEngine.rules[methodDescriptionForClass];
     }
     
-    if (rule.durationThreshold <= 0) {
-        [invocation setSelector:fixedSelector];
+    if (rule.durationThreshold <= 0 || mt_invokeFilterBlock(rule, invocation)) {
+        invocation.selector = fixedSelector;
         [invocation invoke];
         return;
     }
     
     NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
-
     switch (rule.mode) {
         case MTPerformModeFirstly:
             if (now - rule.lastTimeRequest > rule.durationThreshold) {

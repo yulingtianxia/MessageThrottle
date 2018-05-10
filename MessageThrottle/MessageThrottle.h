@@ -57,6 +57,12 @@ Class mt_metaClass(Class cls);
 @property (nonatomic) MTPerformMode mode;
 
 /**
+ 是否过滤掉这条消息，block 的返回值为 BOOL 类型，参数列表与消息的方法列表相同。
+ 如果返回 YES，则表明此条消息很重要，不能被忽略，无视节流限频。不会影响当前节流模式。
+ */
+@property (nonatomic) id messageFilterBlock;
+
+/**
  MTModePerformLastly 和 MTModePerformDebounce 模式下消息发送的队列，默认在主队列
  */
 @property (nonatomic) dispatch_queue_t messageQueue;
