@@ -262,10 +262,11 @@ static SEL mt_aliasForSelector(Class cls, SEL selector)
 
 static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
 {
-    if (!rule.messageFilterBlock) {
+    if (!rule.alwaysInvokeBlock || ![rule.alwaysInvokeBlock isKindOfClass:NSClassFromString(@"NSBlock")]) {
+        NSLog(@"Not Block!");
         return NO;
     }
-    NSMethodSignature *filterBlockSignature = [NSMethodSignature signatureWithObjCTypes:mt_blockMethodSignature(rule.messageFilterBlock)];
+    NSMethodSignature *filterBlockSignature = [NSMethodSignature signatureWithObjCTypes:mt_blockMethodSignature(rule.alwaysInvokeBlock)];
     NSInvocation *blockInvocation = [NSInvocation invocationWithMethodSignature:filterBlockSignature];
     NSUInteger numberOfArguments = filterBlockSignature.numberOfArguments;
     
@@ -293,9 +294,10 @@ static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
         [blockInvocation setArgument:argBuf atIndex:idx];
     }
     
-    [blockInvocation invokeWithTarget:rule.messageFilterBlock];
+    [blockInvocation invokeWithTarget:rule.alwaysInvokeBlock];
     BOOL returnedValue = NO;
     [blockInvocation getReturnValue:&returnedValue];
+    
     if (argBuf != NULL) {
         free(argBuf);
     }
@@ -548,6 +550,11 @@ static void mt_configureTargetDealloc(MTRule *rule)
 
 - (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
 {
+    return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:messageQueue alwaysInvokeBlock:nil];
+}
+
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue alwaysInvokeBlock:(id)alwaysInvokeBlock
+{
     MTRule *rule = MTEngine.defaultEngine.rules[mt_methodDescription(self, selector)];
     if (!rule) {
         rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
@@ -555,6 +562,7 @@ static void mt_configureTargetDealloc(MTRule *rule)
     rule.durationThreshold = durationThreshold;
     rule.mode = mode;
     rule.messageQueue = messageQueue;
+    rule.alwaysInvokeBlock = alwaysInvokeBlock;
     return [rule apply] ? rule : nil;
 }
 

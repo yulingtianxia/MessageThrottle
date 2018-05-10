@@ -29,11 +29,27 @@
     
 //    MTRule *rule = [[MTRule alloc] initWithTarget:self.stub selector:@selector(foo:) durationThreshold:1];
 //    rule.messageQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-//
+//    rule.alwaysInvokeBlock = ^(MTRule *rule, NSDate *date) {
+//        if ([date isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]]) {
+//            return YES;
+//        }
+//        return NO;
+//    };
 //    [MTEngine.defaultEngine applyRule:rule];
     
     // 跟上面的用法等价
-    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.5 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+    MTRule *rule = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.5 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
+        if ([date isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]]) {
+            return YES;
+        }
+        return NO;
+    }];
+    rule.alwaysInvokeBlock = ^(MTRule *rule, NSDate *date) {
+        if ([date isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]]) {
+            return YES;
+        }
+        return NO;
+    };
     NSArray<MTRule *> *rules = self.stub.mt_allRules;
 //    self.stub = nil;
     
@@ -47,6 +63,10 @@
 
 - (IBAction)tapFoo:(UIButton *)sender {
     [self.stub foo:[NSDate date]];
+}
+
+- (IBAction)tapBar:(UIButton *)sender {
+    [self.stub foo:[NSDate dateWithTimeIntervalSince1970:0]];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -63,7 +83,7 @@
     df.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:[NSTimeZone localTimeZone].secondsFromGMT];
     NSString *localDateString = [df stringFromDate:date];
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.label.text = [NSString stringWithFormat:@"Last Tap Date: %@", localDateString];
+        self.label.text = [NSString stringWithFormat:@"Last Fire Date: %@", localDateString];
     });
 }
 

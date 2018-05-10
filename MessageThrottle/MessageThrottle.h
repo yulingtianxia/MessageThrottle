@@ -57,10 +57,11 @@ Class mt_metaClass(Class cls);
 @property (nonatomic) MTPerformMode mode;
 
 /**
- 是否过滤掉这条消息，block 的返回值为 BOOL 类型，参数列表与消息的方法列表相同。
- 如果返回 YES，则表明此条消息很重要，不能被忽略，无视节流限频。不会影响当前节流模式。
+ 是否必须执行消息。block 的参数列表可选，返回值为 BOOL 类型。
+ block 传入的第一个参数为 `self`，其余参数列表与消息调用的参数列表相同。
+ block 如果返回 YES，则消息立即执行，但不会影响当前节流模式。
  */
-@property (nonatomic) id messageFilterBlock;
+@property (nonatomic) id alwaysInvokeBlock;
 
 /**
  MTModePerformLastly 和 MTModePerformDebounce 模式下消息发送的队列，默认在主队列
@@ -143,6 +144,18 @@ Class mt_metaClass(Class cls);
  @return 如果限频成功则返回规则对象，否则返回 nil
  */
 - (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
+
+/**
+ 对方法调用限频，可以指定方法某种情况下一定会调用
+ 
+ @param selector 限频的方法
+ @param durationThreshold 限频的阈值
+ @param mode 限频模式
+ @param messageQueue 延时执行方法的队列
+ @param alwaysInvokeBlock 是否必须执行消息。block 的参数列表可选，返回值为 BOOL 类型。参考 `MTRule`。
+ @return 如果限频成功则返回规则对象，否则返回 nil
+ */
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue alwaysInvokeBlock:(nullable id)alwaysInvokeBlock;
 
 @end
 

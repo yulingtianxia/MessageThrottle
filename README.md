@@ -31,6 +31,7 @@ MessageThrottle is a lightweight, simple library for controlling frequency of fo
 - [x] Support 3 modes: Throttle(Firstly), Throttle(Last) and Debounce.
 - [x] Centralized management of rules.
 - [x] Self-managed rules.
+- [x] Let method **MUST** invoke at the specified conditions.
 
 ## 🔮 Example
 
@@ -45,7 +46,7 @@ Stub *s = [Stub new];
 MTRule *rule = [s limitSelector:@selector(foo:) oncePerDuration:0.01]; // returns MTRule instance
 ``` 
 
-For more control of rule, you can use `mt_limitSelector:oncePerDuration:usingMode:onMessageQueue:`.
+For more control of rule, you can use `mt_limitSelector:oncePerDuration:usingMode:onMessageQueue:alwaysInvokeBlock:`.
 
 You can also start with a creation of `MTRule`:
 
@@ -55,8 +56,16 @@ Stub *s = [Stub new];
 MTRule *rule = [[MTRule alloc] initWithTarget:s selector:@selector(foo:) durationThreshold:0.01];
 rule.mode = MTModePerformLast; // Or `MTModePerformFirstly`, ect
 rule.messageQueue = /** a dispatch queue you want, maybe `dispatch_get_main_queue()` whatever...*/
+rule.alwaysInvokeBlock = ^(MTRule *rule, NSDate *date) {
+   if ([date isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]]) {
+       return YES;
+   }
+   return NO;
+};
 [rule apply];
 ```
+
+You can let method **MUST** invoke at the specified conditions using `alwaysInvokeBlock`. The example code above will invoke message immediately if its 1st parameter equals "1970". BTW, `alwaysInvokeBlock` can has no parameter, or has one more `MTRule` before message's parameter list.
 
 You should call `discard` method When you don't need limit `foo:` method.
 
