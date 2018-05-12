@@ -37,6 +37,8 @@ MessageThrottle is a lightweight, simple library for controlling frequency of fo
 
 To run the example project, clone the repo and run MTDemo target.
 
+![](Assets/demo.gif)
+
 ## 🐒 How to use
 
 The following example shows how to restrict the frequency of forwarding `- [ViewController foo:]` message to 100 times per second.

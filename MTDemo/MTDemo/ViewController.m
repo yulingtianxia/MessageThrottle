@@ -78,12 +78,12 @@
 {
     NSDate *date = notification.userInfo[@"arg"];
     NSDateFormatter *df = [NSDateFormatter new];
-    [df setDateFormat:@"dd/MM/yyyy HH:mm:ss"];
+    [df setDateFormat:@"dd/MM/yyyy\nHH:mm:ss"];
     
     df.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:[NSTimeZone localTimeZone].secondsFromGMT];
     NSString *localDateString = [df stringFromDate:date];
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.label.text = [NSString stringWithFormat:@"Last Fire Date: %@", localDateString];
+        self.label.text = [NSString stringWithFormat:@"Last Fire Date:\n%@", localDateString];
     });
 }
 
