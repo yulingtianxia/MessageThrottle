@@ -263,7 +263,6 @@ static SEL mt_aliasForSelector(Class cls, SEL selector)
 static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
 {
     if (!rule.alwaysInvokeBlock || ![rule.alwaysInvokeBlock isKindOfClass:NSClassFromString(@"NSBlock")]) {
-        NSLog(@"Not Block!");
         return NO;
     }
     NSMethodSignature *filterBlockSignature = [NSMethodSignature signatureWithObjCTypes:mt_blockMethodSignature(rule.alwaysInvokeBlock)];
@@ -370,7 +369,9 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
         mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
         return;
     }
+    pthread_mutex_lock(&mutex);
     mt_handleInvocation(invocation, fixedOriginalSelector);
+    pthread_mutex_unlock(&mutex);
 }
 
 static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";

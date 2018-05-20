@@ -12,6 +12,7 @@
 
 - (void)foo:(NSDate *)arg {
     NSLog(@"SuperStub foo: %@", arg);
+//    [NSThread sleepForTimeInterval:0.0001];
 }
 
 + (void)foo:(NSDate *)arg {
