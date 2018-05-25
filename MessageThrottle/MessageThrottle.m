@@ -33,18 +33,6 @@ Class mt_metaClass(Class cls)
     return object_getClass(cls);
 }
 
-static NSString * mt_methodDescription(id target, SEL selector)
-{
-    NSString *selectorName = NSStringFromSelector(selector);
-    if (mt_object_isClass(target)) {
-        NSString *className = NSStringFromClass(target);
-        return [NSString stringWithFormat:@"%@ [%@ %@]", class_isMetaClass(target) ? @"+" : @"-", className, selectorName];
-    }
-    else {
-        return [NSString stringWithFormat:@"[%p %@]", target, selectorName];
-    }
-}
-
 enum {
     BLOCK_HAS_COPY_DISPOSE =  (1 << 25),
     BLOCK_HAS_CTOR =          (1 << 26), // helpers have C++ code
@@ -85,9 +73,9 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @interface MTDealloc : NSObject
 
-@property (nonatomic, weak) MTRule *rule;
-@property (nonatomic, copy) NSString *methodDescription;
+@property (nonatomic) MTRule *rule;
 @property (nonatomic) Class cls;
+@property (nonatomic) NSRecursiveLock *invokeLock;
 
 @end
 
@@ -134,11 +122,18 @@ static const char * mt_blockMethodSignature(id blockObj)
     return [MTEngine.defaultEngine discardRule:self];
 }
 
+- (MTDealloc *)mt_deallocObject
+{
+    MTDealloc *mtDealloc = objc_getAssociatedObject(self.target, self.selector);
+    return mtDealloc;
+}
+
 @end
 
 @interface MTEngine ()
 
-@property (nonatomic) NSMutableDictionary<NSString *, MTRule *> *rules;
+@property (nonatomic) NSMapTable<id, NSMutableArray<NSString *> *> *targetSELs;
+@property (nonatomic) NSMutableDictionary<NSString *, NSString *> *aliasSelectorCache;
 
 - (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc;
 
@@ -147,6 +142,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 @implementation MTEngine
 
 static pthread_mutex_t mutex;
+static pthread_mutex_t alias_selector_mutex;
 
 + (instancetype)defaultEngine
 {
@@ -162,15 +158,70 @@ static pthread_mutex_t mutex;
 {
     self = [super init];
     if (self) {
-        _rules = [NSMutableDictionary dictionary];
+        _targetSELs = [NSMapTable weakToStrongObjectsMapTable];
+        _aliasSelectorCache = [NSMutableDictionary dictionary];
         pthread_mutex_init(&mutex, NULL);
+        pthread_mutex_init(&alias_selector_mutex, NULL);
     }
     return self;
 }
 
 - (NSArray<MTRule *> *)allRules
 {
-    return [self.rules allValues];
+    pthread_mutex_lock(&mutex);
+    NSMutableArray *rules = [NSMutableArray array];
+    for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
+        NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+        for (NSString *selectorName in selectors) {
+            MTDealloc *mtDealloc = objc_getAssociatedObject(target, NSSelectorFromString(selectorName));
+            [rules addObject:mtDealloc.rule];
+        }
+    }
+    pthread_mutex_unlock(&mutex);
+    return [rules copy];
+}
+
+- (void)addSelector:(SEL)selector onTarget:(id)target
+{
+    if (!target) {
+        return;
+    }
+    NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+    if (!selectors) {
+        selectors = [NSMutableArray array];
+    }
+    [selectors addObject:NSStringFromSelector(selector)];
+    [self.targetSELs setObject:selectors forKey:target];
+}
+
+- (void)removeSelector:(SEL)selector onTarget:(id)target
+{
+    if (!target) {
+        return;
+    }
+    NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+    if (!selectors) {
+        selectors = [NSMutableArray array];
+    }
+    [selectors removeObject:NSStringFromSelector(selector)];
+    [self.targetSELs setObject:selectors forKey:target];
+}
+
+- (BOOL)containsSelector:(SEL)selector onTarget:(id)target
+{
+    return [[self.targetSELs objectForKey:target] containsObject:NSStringFromSelector(selector)];
+}
+
+- (BOOL)containsSelector:(SEL)selector onClass:(Class)cls
+{
+    for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
+        if (!mt_object_isClass(target) &&
+            [target isMemberOfClass:cls] &&
+            [[self.targetSELs objectForKey:target] containsObject:NSStringFromSelector(selector)]) {
+            return YES;
+        }
+    }
+    return NO;
 }
 
 - (BOOL)applyRule:(MTRule *)rule
@@ -178,20 +229,21 @@ static pthread_mutex_t mutex;
     pthread_mutex_lock(&mutex);
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
-        [self.rules enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MTRule * _Nonnull obj, BOOL * _Nonnull stop) {
-            if (sel_isEqual(rule.selector, obj.selector)
-                && mt_object_isClass(rule.target)
-                && mt_object_isClass(obj.target)) {
-                Class clsA = rule.target;
-                Class clsB = obj.target;
-                shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
-                *stop = shouldApply;
-                NSCAssert(shouldApply, @"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", NSStringFromSelector(obj.selector), NSStringFromClass(clsB));
+        for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
+            NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+            for (NSString *selectorName in selectors) {
+                if (sel_isEqual(rule.selector, NSSelectorFromString(selectorName))
+                    && mt_object_isClass(rule.target)
+                    && mt_object_isClass(target)) {
+                    Class clsA = rule.target;
+                    Class clsB = target;
+                    shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]) && shouldApply;
+                    NSCAssert(shouldApply, @"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", selectorName, NSStringFromClass(clsB));
+                }
             }
-        }];
-        
+        }
         if (shouldApply) {
-            self.rules[mt_methodDescription(rule.target, rule.selector)] = rule;
+            [self addSelector:rule.selector onTarget:rule.target];
             mt_overrideMethod(rule.target, rule.selector);
             mt_configureTargetDealloc(rule);
         }
@@ -208,10 +260,9 @@ static pthread_mutex_t mutex;
     pthread_mutex_lock(&mutex);
     BOOL shouldDiscard = NO;
     if (mt_checkRuleValid(rule)) {
-        NSString *description = mt_methodDescription(rule.target, rule.selector);
-        shouldDiscard = self.rules[description] != nil;
+        shouldDiscard = [self containsSelector:rule.selector onTarget:rule.target];
         if (shouldDiscard) {
-            self.rules[description] = nil;
+            [self removeSelector:rule.selector onTarget:rule.target];
             mt_recoverMethod(rule.target, rule.selector);
         }
     }
@@ -221,14 +272,12 @@ static pthread_mutex_t mutex;
 
 - (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc
 {
+    if (mt_object_isClass(rule.target)) {
+        return;
+    }
     pthread_mutex_lock(&mutex);
-    
-    NSString *description = mtDealloc.methodDescription;
-    if (self.rules[description] != nil) {
-        self.rules[description] = nil;
-        if (MTEngine.defaultEngine.rules[mt_methodDescription(mtDealloc.cls, rule.selector)]) {
-            return;
-        }
+    if (![self containsSelector:rule.selector onTarget:mtDealloc.cls] &&
+        ![self containsSelector:rule.selector onClass:mtDealloc.cls]) {
         mt_revertHook(mtDealloc.cls, rule.selector);
     }
     pthread_mutex_unlock(&mutex);
@@ -253,11 +302,18 @@ static BOOL mt_checkRuleValid(MTRule *rule)
     return NO;
 }
 
-static SEL mt_aliasForSelector(Class cls, SEL selector)
+static SEL mt_aliasForSelector(SEL selector)
 {
-    NSString *fixedOriginalSelectorName = [NSString stringWithFormat:@"__mt_%@", NSStringFromSelector(selector)];
-    SEL fixedOriginalSelector = NSSelectorFromString(fixedOriginalSelectorName);
-    return fixedOriginalSelector;
+    pthread_mutex_lock(&alias_selector_mutex);
+    NSString *selectorName = NSStringFromSelector(selector);
+    NSString *aliasSelectorName = MTEngine.defaultEngine.aliasSelectorCache[selectorName];
+    if (aliasSelectorName.length == 0) {
+        aliasSelectorName = [NSString stringWithFormat:@"__mt_%@", selectorName];
+        MTEngine.defaultEngine.aliasSelectorCache[selectorName] = aliasSelectorName;
+    }
+    SEL aliasSelector = NSSelectorFromString(aliasSelectorName);
+    pthread_mutex_unlock(&alias_selector_mutex);
+    return aliasSelector;
 }
 
 static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
@@ -311,12 +367,11 @@ static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
  */
 static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
 {
-    NSString *methodDescriptionForInstance = mt_methodDescription(invocation.target, invocation.selector);
-    NSString *methodDescriptionForClass = mt_methodDescription(object_getClass(invocation.target), invocation.selector);
-    
-    MTRule *rule = MTEngine.defaultEngine.rules[methodDescriptionForInstance];
+    MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
+    MTRule *rule = mtDealloc.rule;
     if (!rule) {
-        rule = MTEngine.defaultEngine.rules[methodDescriptionForClass];
+        MTDealloc *mtDealloc = objc_getAssociatedObject(object_getClass(invocation.target), invocation.selector);
+        rule = mtDealloc.rule;
     }
     
     if (rule.durationThreshold <= 0 || mt_invokeFilterBlock(rule, invocation)) {
@@ -364,14 +419,15 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
 static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
 {
     SEL originalSelector = invocation.selector;
-    SEL fixedOriginalSelector = mt_aliasForSelector(object_getClass(assignSlf), originalSelector);
+    SEL fixedOriginalSelector = mt_aliasForSelector(originalSelector);
     if (![assignSlf respondsToSelector:fixedOriginalSelector]) {
         mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
         return;
     }
-    pthread_mutex_lock(&mutex);
+    MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, selector);
+    [mtDealloc.invokeLock lock];
     mt_handleInvocation(invocation, fixedOriginalSelector);
-    pthread_mutex_unlock(&mutex);
+    [mtDealloc.invokeLock unlock];
 }
 
 static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";
@@ -430,7 +486,7 @@ static void mt_overrideMethod(id target, SEL selector)
     }
     
     if (class_respondsToSelector(cls, selector)) {
-        SEL fixedOriginalSelector = mt_aliasForSelector(cls, selector);
+        SEL fixedOriginalSelector = mt_aliasForSelector(selector);
         if(!class_respondsToSelector(cls, fixedOriginalSelector)) {
             class_addMethod(cls, fixedOriginalSelector, originalImp, originType);
         }
@@ -460,7 +516,7 @@ static void mt_revertHook(Class cls, SEL selector)
     }
     const char *originType = (char *)method_getTypeEncoding(originMethod);
     
-    SEL fixedOriginalSelector = mt_aliasForSelector(cls, selector);
+    SEL fixedOriginalSelector = mt_aliasForSelector(selector);
     if (class_respondsToSelector(cls, fixedOriginalSelector)) {
         IMP originalImp = class_getMethodImplementation(cls, fixedOriginalSelector);
         class_replaceMethod(cls, selector, originalImp, originType);
@@ -475,7 +531,8 @@ static void mt_recoverMethod(id target, SEL selector)
     }
     else {
         cls = object_getClass(target);
-        if (MTEngine.defaultEngine.rules[mt_methodDescription(cls, selector)]) {
+        if ([MTEngine.defaultEngine containsSelector:selector onTarget:cls]||
+            [MTEngine.defaultEngine containsSelector:selector onClass:cls]) {
             return;
         }
     }
@@ -508,19 +565,14 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
 
 static void mt_configureTargetDealloc(MTRule *rule)
 {
-    if (mt_object_isClass(rule.target)) {
-        return;
-    }
-    else {
-        Class cls = object_getClass(rule.target);
-        MTDealloc *mtDealloc = objc_getAssociatedObject(rule.target, rule.selector);
-        if (!mtDealloc) {
-            mtDealloc = [MTDealloc new];
-            mtDealloc.rule = rule;
-            mtDealloc.methodDescription = mt_methodDescription(rule.target, rule.selector);
-            mtDealloc.cls = cls;
-            objc_setAssociatedObject(rule.target, rule.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
-        }
+    Class cls = object_getClass(rule.target);
+    MTDealloc *mtDealloc = [rule mt_deallocObject];
+    if (!mtDealloc) {
+        mtDealloc = [MTDealloc new];
+        mtDealloc.rule = rule;
+        mtDealloc.cls = cls;
+        mtDealloc.invokeLock = [NSRecursiveLock new];
+        objc_setAssociatedObject(rule.target, rule.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
     }
 }
 
@@ -556,7 +608,8 @@ static void mt_configureTargetDealloc(MTRule *rule)
 
 - (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue alwaysInvokeBlock:(id)alwaysInvokeBlock
 {
-    MTRule *rule = MTEngine.defaultEngine.rules[mt_methodDescription(self, selector)];
+    MTDealloc *mtDealloc = objc_getAssociatedObject(self, selector);
+    MTRule *rule = mtDealloc.rule;
     if (!rule) {
         rule = [[MTRule alloc] initWithTarget:self selector:selector durationThreshold:durationThreshold];
     }

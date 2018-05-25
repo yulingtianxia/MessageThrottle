@@ -44,12 +44,7 @@
         }
         return NO;
     }];
-    rule.alwaysInvokeBlock = ^(MTRule *rule, NSDate *date) {
-        if ([date isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]]) {
-            return YES;
-        }
-        return NO;
-    };
+
     NSArray<MTRule *> *rules = self.stub.mt_allRules;
 //    self.stub = nil;
     
