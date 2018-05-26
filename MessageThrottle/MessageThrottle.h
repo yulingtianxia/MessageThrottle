@@ -82,7 +82,7 @@ Class mt_metaClass(Class cls);
 /**
  废除规则
  
- @return 废除成功返回 YES；如果规则不存在或不合法，则返回 NO
+ @return 废除成功返回 YES；如果规则不存在或不合法，或者废除 target 对象后依然存在 target 为类的规则，则返回 NO
  */
 - (BOOL)discard;
 
@@ -105,7 +105,7 @@ Class mt_metaClass(Class cls);
  废除规则
 
  @param rule MTRule 对象
- @return 废除成功返回 YES；如果规则不存在或不合法，则返回 NO
+ @return 废除成功返回 YES；如果规则不存在或不合法，或者废除 target 对象后依然存在 target 为类的规则，则返回 NO
  */
 - (BOOL)discardRule:(MTRule *)rule;
 

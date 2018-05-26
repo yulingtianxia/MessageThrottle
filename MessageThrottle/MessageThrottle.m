@@ -132,7 +132,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @interface MTEngine ()
 
-@property (nonatomic) NSMapTable<id, NSMutableArray<NSString *> *> *targetSELs;
+@property (nonatomic) NSMapTable<id, NSMutableSet<NSString *> *> *targetSELs;
 @property (nonatomic) NSMutableDictionary<NSString *, NSString *> *aliasSelectorCache;
 
 - (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc;
@@ -171,7 +171,7 @@ static pthread_mutex_t alias_selector_mutex;
     pthread_mutex_lock(&mutex);
     NSMutableArray *rules = [NSMutableArray array];
     for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
-        NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+        NSMutableSet *selectors = [self.targetSELs objectForKey:target];
         for (NSString *selectorName in selectors) {
             MTDealloc *mtDealloc = objc_getAssociatedObject(target, NSSelectorFromString(selectorName));
             [rules addObject:mtDealloc.rule];
@@ -186,9 +186,9 @@ static pthread_mutex_t alias_selector_mutex;
     if (!target) {
         return;
     }
-    NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+    NSMutableSet *selectors = [self.targetSELs objectForKey:target];
     if (!selectors) {
-        selectors = [NSMutableArray array];
+        selectors = [NSMutableSet set];
     }
     [selectors addObject:NSStringFromSelector(selector)];
     [self.targetSELs setObject:selectors forKey:target];
@@ -199,9 +199,9 @@ static pthread_mutex_t alias_selector_mutex;
     if (!target) {
         return;
     }
-    NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+    NSMutableSet *selectors = [self.targetSELs objectForKey:target];
     if (!selectors) {
-        selectors = [NSMutableArray array];
+        selectors = [NSMutableSet set];
     }
     [selectors removeObject:NSStringFromSelector(selector)];
     [self.targetSELs setObject:selectors forKey:target];
@@ -212,7 +212,7 @@ static pthread_mutex_t alias_selector_mutex;
     return [[self.targetSELs objectForKey:target] containsObject:NSStringFromSelector(selector)];
 }
 
-- (BOOL)containsSelector:(SEL)selector onClass:(Class)cls
+- (BOOL)containsSelector:(SEL)selector onTargetsOfClass:(Class)cls
 {
     for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
         if (!mt_object_isClass(target) &&
@@ -230,7 +230,7 @@ static pthread_mutex_t alias_selector_mutex;
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
-            NSMutableArray *selectors = [self.targetSELs objectForKey:target];
+            NSMutableSet *selectors = [self.targetSELs objectForKey:target];
             for (NSString *selectorName in selectors) {
                 if (sel_isEqual(rule.selector, NSSelectorFromString(selectorName))
                     && mt_object_isClass(rule.target)
@@ -260,11 +260,8 @@ static pthread_mutex_t alias_selector_mutex;
     pthread_mutex_lock(&mutex);
     BOOL shouldDiscard = NO;
     if (mt_checkRuleValid(rule)) {
-        shouldDiscard = [self containsSelector:rule.selector onTarget:rule.target];
-        if (shouldDiscard) {
-            [self removeSelector:rule.selector onTarget:rule.target];
-            mt_recoverMethod(rule.target, rule.selector);
-        }
+        [self removeSelector:rule.selector onTarget:rule.target];
+        shouldDiscard = mt_recoverMethod(rule.target, rule.selector);
     }
     pthread_mutex_unlock(&mutex);
     return shouldDiscard;
@@ -277,7 +274,7 @@ static pthread_mutex_t alias_selector_mutex;
     }
     pthread_mutex_lock(&mutex);
     if (![self containsSelector:rule.selector onTarget:mtDealloc.cls] &&
-        ![self containsSelector:rule.selector onClass:mtDealloc.cls]) {
+        ![self containsSelector:rule.selector onTargetsOfClass:mtDealloc.cls]) {
         mt_revertHook(mtDealloc.cls, rule.selector);
     }
     pthread_mutex_unlock(&mutex);
@@ -523,20 +520,24 @@ static void mt_revertHook(Class cls, SEL selector)
     }
 }
 
-static void mt_recoverMethod(id target, SEL selector)
+static BOOL mt_recoverMethod(id target, SEL selector)
 {
     Class cls;
     if (mt_object_isClass(target)) {
         cls = target;
+        if ([MTEngine.defaultEngine containsSelector:selector onTargetsOfClass:cls]) {
+            return NO;
+        }
     }
     else {
         cls = object_getClass(target);
-        if ([MTEngine.defaultEngine containsSelector:selector onTarget:cls]||
-            [MTEngine.defaultEngine containsSelector:selector onClass:cls]) {
-            return;
+        if ([MTEngine.defaultEngine containsSelector:selector onTarget:cls] ||
+            [MTEngine.defaultEngine containsSelector:selector onTargetsOfClass:cls]) {
+            return NO;
         }
     }
     mt_revertHook(cls, selector);
+    return YES;
 }
 
 static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
