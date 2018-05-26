@@ -75,7 +75,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @property (nonatomic) MTRule *rule;
 @property (nonatomic) Class cls;
-@property (nonatomic) NSRecursiveLock *invokeLock;
+@property (nonatomic) pthread_mutex_t invokeLock;
 
 @end
 
@@ -422,9 +422,10 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
         return;
     }
     MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, selector);
-    [mtDealloc.invokeLock lock];
+    pthread_mutex_t mutex = mtDealloc.invokeLock;
+    pthread_mutex_lock(&mutex);
     mt_handleInvocation(invocation, fixedOriginalSelector);
-    [mtDealloc.invokeLock unlock];
+    pthread_mutex_unlock(&mutex);
 }
 
 static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";
@@ -572,7 +573,11 @@ static void mt_configureTargetDealloc(MTRule *rule)
         mtDealloc = [MTDealloc new];
         mtDealloc.rule = rule;
         mtDealloc.cls = cls;
-        mtDealloc.invokeLock = [NSRecursiveLock new];
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_t mutex = mtDealloc.invokeLock;
+        pthread_mutex_init(&mutex, &attr);
         objc_setAssociatedObject(rule.target, rule.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
     }
 }
