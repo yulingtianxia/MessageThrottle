@@ -181,6 +181,13 @@ static pthread_mutex_t alias_selector_mutex;
     return [rules copy];
 }
 
+
+/**
+ 添加 target-selector 记录
+
+ @param selector 方法名
+ @param target 对象，类，元类
+ */
 - (void)addSelector:(SEL)selector onTarget:(id)target
 {
     if (!target) {
@@ -194,6 +201,12 @@ static pthread_mutex_t alias_selector_mutex;
     [self.targetSELs setObject:selectors forKey:target];
 }
 
+/**
+ 移除 target-selector 记录
+ 
+ @param selector 方法名
+ @param target 对象，类，元类
+ */
 - (void)removeSelector:(SEL)selector onTarget:(id)target
 {
     if (!target) {
@@ -207,11 +220,25 @@ static pthread_mutex_t alias_selector_mutex;
     [self.targetSELs setObject:selectors forKey:target];
 }
 
+/**
+ 是否存在 target-selector 记录
+
+ @param selector 方法名
+ @param target 对象，类，元类
+ @return 是否存在记录
+ */
 - (BOOL)containsSelector:(SEL)selector onTarget:(id)target
 {
     return [[self.targetSELs objectForKey:target] containsObject:NSStringFromSelector(selector)];
 }
 
+/**
+ 是否存在 target-selector 记录，未指定具体 target，但 target 的类型为 cls 即可
+
+ @param selector 方法名
+ @param cls 类
+ @return 是否存在记录
+ */
 - (BOOL)containsSelector:(SEL)selector onTargetsOfClass:(Class)cls
 {
     for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
