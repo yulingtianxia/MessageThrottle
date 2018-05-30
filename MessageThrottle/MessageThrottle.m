@@ -159,7 +159,7 @@ static pthread_mutex_t alias_selector_mutex;
     self = [super init];
     if (self) {
         _targetSELs = [NSMapTable weakToStrongObjectsMapTable];
-        _aliasSelectorCache = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality                                                    valueOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality];
+        _aliasSelectorCache = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality valueOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality];
         pthread_mutex_init(&mutex, NULL);
         pthread_mutex_init(&alias_selector_mutex, NULL);
     }
