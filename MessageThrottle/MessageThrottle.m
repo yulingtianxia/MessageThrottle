@@ -133,7 +133,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 @interface MTEngine ()
 
 @property (nonatomic) NSMapTable<id, NSMutableSet<NSString *> *> *targetSELs;
-@property (nonatomic) NSMutableDictionary<NSString *, NSString *> *aliasSelectorCache;
+@property (nonatomic) NSMapTable *aliasSelectorCache;
 
 - (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc;
 
@@ -159,7 +159,7 @@ static pthread_mutex_t alias_selector_mutex;
     self = [super init];
     if (self) {
         _targetSELs = [NSMapTable weakToStrongObjectsMapTable];
-        _aliasSelectorCache = [NSMutableDictionary dictionary];
+        _aliasSelectorCache = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality                                                    valueOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality];
         pthread_mutex_init(&mutex, NULL);
         pthread_mutex_init(&alias_selector_mutex, NULL);
     }
@@ -329,13 +329,12 @@ static BOOL mt_checkRuleValid(MTRule *rule)
 static SEL mt_aliasForSelector(SEL selector)
 {
     pthread_mutex_lock(&alias_selector_mutex);
-    NSString *selectorName = NSStringFromSelector(selector);
-    NSString *aliasSelectorName = MTEngine.defaultEngine.aliasSelectorCache[selectorName];
-    if (aliasSelectorName.length == 0) {
-        aliasSelectorName = [NSString stringWithFormat:@"__mt_%@", selectorName];
-        MTEngine.defaultEngine.aliasSelectorCache[selectorName] = aliasSelectorName;
+    SEL aliasSelector = (__bridge void *)[MTEngine.defaultEngine.aliasSelectorCache objectForKey:(__bridge id)(void *)selector];
+    if (!aliasSelector) {
+        NSString *selectorName = NSStringFromSelector(selector);
+        aliasSelector = NSSelectorFromString([NSString stringWithFormat:@"__mt_%@", selectorName]);
+        [MTEngine.defaultEngine.aliasSelectorCache setObject:(__bridge id)(void *)aliasSelector forKey:(__bridge id)(void *)selector];
     }
-    SEL aliasSelector = NSSelectorFromString(aliasSelectorName);
     pthread_mutex_unlock(&alias_selector_mutex);
     return aliasSelector;
 }

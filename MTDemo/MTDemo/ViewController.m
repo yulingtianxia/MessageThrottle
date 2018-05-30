@@ -50,7 +50,11 @@
     
     for (MTRule *rule in rules) {
         NSLog(@"%@", rule);
+        NSLog(@"%p", rule.selector);
     }
+    
+    NSLog(@"%p", @selector(foo:));
+    NSLog(@"%p", NSSelectorFromString(@"foo:"));
     
 //    [MTEngine.defaultEngine discardRule:rule];
     
