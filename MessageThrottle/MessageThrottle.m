@@ -393,7 +393,7 @@ static void mt_handleInvocation(NSInvocation *invocation, SEL fixedSelector)
     MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
     MTRule *rule = mtDealloc.rule;
     if (!rule) {
-        MTDealloc *mtDealloc = objc_getAssociatedObject(object_getClass(invocation.target), invocation.selector);
+        mtDealloc = objc_getAssociatedObject(object_getClass(invocation.target), invocation.selector);
         rule = mtDealloc.rule;
     }
     
@@ -447,7 +447,7 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
         mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
         return;
     }
-    MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, selector);
+    MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, originalSelector);
     pthread_mutex_t mutex = mtDealloc.invokeLock;
     pthread_mutex_lock(&mutex);
     mt_handleInvocation(invocation, fixedOriginalSelector);
@@ -602,8 +602,9 @@ static void mt_configureTargetDealloc(MTRule *rule)
         pthread_mutexattr_t attr;
         pthread_mutexattr_init(&attr);
         pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-        pthread_mutex_t mutex = mtDealloc.invokeLock;
+        pthread_mutex_t mutex;
         pthread_mutex_init(&mutex, &attr);
+        mtDealloc.invokeLock = mutex;
         objc_setAssociatedObject(rule.target, rule.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
     }
 }
