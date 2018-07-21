@@ -68,6 +68,11 @@ Class mt_metaClass(Class cls);
  */
 @property (nonatomic) dispatch_queue_t messageQueue;
 
+/**
+ 是否持久化规则。如果选择持久化，下次启动 App 将会自动应用规则；默认为 NO，规则只在内存中生效。
+ */
+@property (nonatomic, getter=isPersistence) BOOL persistence;
+
 - (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;

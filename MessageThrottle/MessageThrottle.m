@@ -11,6 +11,14 @@
 #import <objc/message.h>
 #import <pthread.h>
 
+#if TARGET_OS_IOS || TARGET_OS_TV
+#import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+#elif TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
+
 #if !__has_feature(objc_arc)
 #error
 #endif
@@ -89,7 +97,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @end
 
-@interface MTRule ()
+@interface MTRule () <NSCoding>
 
 @property (nonatomic) NSTimeInterval lastTimeRequest;
 @property (nonatomic) NSInvocation *lastInvocation;
@@ -128,6 +136,37 @@ static const char * mt_blockMethodSignature(id blockObj)
     return mtDealloc;
 }
 
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    if (mt_object_isClass(self.target)) {
+        Class cls = self.target;
+        [aCoder encodeObject:NSStringFromClass(cls) forKey:@"target"];
+    }
+    [aCoder encodeObject:NSStringFromSelector(self.selector) forKey:@"selector"];
+    [aCoder encodeDouble:self.durationThreshold forKey:@"durationThreshold"];
+    [aCoder encodeObject:@(self.mode) forKey:@"mode"];
+    [aCoder encodeDouble:self.lastTimeRequest forKey:@"lastTimeRequest"];
+    [aCoder encodeBool:self.isPersistence forKey:@"persistence"];
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    id target = NSClassFromString([aDecoder decodeObjectForKey:@"target"]);
+    if (target) {
+        SEL selector = NSSelectorFromString([aDecoder decodeObjectForKey:@"selector"]);
+        NSTimeInterval durationThreshold = [aDecoder decodeDoubleForKey:@"durationThreshold"];
+        MTPerformMode mode = [[aDecoder decodeObjectForKey:@"mode"] unsignedIntegerValue];
+        NSTimeInterval lastTimeRequest = [aDecoder decodeDoubleForKey:@"lastTimeRequest"];
+        BOOL persistence = [aDecoder decodeObjectForKey:@"persistence"];
+        self = [self initWithTarget:target selector:selector durationThreshold:durationThreshold];
+        self.mode = mode;
+        self.lastTimeRequest = lastTimeRequest;
+        self.persistence = persistence;
+        return self;
+    }
+    return nil;
+}
+
 @end
 
 @interface MTEngine ()
@@ -143,6 +182,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 static pthread_mutex_t mutex;
 static pthread_mutex_t alias_selector_mutex;
+static pthread_mutex_t test_mutex;
 
 + (instancetype)defaultEngine
 {
@@ -154,6 +194,14 @@ static pthread_mutex_t alias_selector_mutex;
     return instance;
 }
 
++ (void)load
+{
+//    NSArray *array = [NSUserDefaults.standardUserDefaults objectForKey:@"MT_Persistence_Rules"];
+//    for (MTRule *rule in array) {
+//        [rule apply];
+//    }
+}
+
 - (instancetype)init
 {
     self = [super init];
@@ -162,8 +210,21 @@ static pthread_mutex_t alias_selector_mutex;
         _aliasSelectorCache = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality valueOptions:NSPointerFunctionsOpaqueMemory | NSMapTableObjectPointerPersonality];
         pthread_mutex_init(&mutex, NULL);
         pthread_mutex_init(&alias_selector_mutex, NULL);
+        pthread_mutex_init(&test_mutex, NULL);
+//        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(handleAppWillTerminateNotification:) name:UIApplicationWillTerminateNotification object:nil];
     }
     return self;
+}
+
+- (void)handleAppWillTerminateNotification:(NSNotification *)notification
+{
+    NSMutableArray *array = [NSMutableArray array];
+    for (MTRule *rule in self.allRules) {
+        if (rule.isPersistence) {
+            [array addObject:rule];
+        }
+    }
+    [NSUserDefaults.standardUserDefaults setObject:array forKey:@"MT_Persistence_Rules"];
 }
 
 - (NSArray<MTRule *> *)allRules
@@ -447,11 +508,11 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
         mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
         return;
     }
-    MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, originalSelector);
-    pthread_mutex_t mutex = mtDealloc.invokeLock;
-    pthread_mutex_lock(&mutex);
+//    MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, originalSelector);
+//    pthread_mutex_t mutex = mtDealloc.invokeLock;
+    pthread_mutex_lock(&test_mutex);
     mt_handleInvocation(invocation, fixedOriginalSelector);
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&test_mutex);
 }
 
 static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";
