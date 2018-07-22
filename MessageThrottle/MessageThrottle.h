@@ -70,8 +70,9 @@ Class mt_metaClass(Class cls);
 
 /**
  是否持久化规则。如果选择持久化，下次启动 App 将会自动应用规则；默认为 NO，规则只在内存中生效。
+ 仅在 target 不为对象时生效。
  */
-@property (nonatomic, getter=isPersistence) BOOL persistence;
+@property (nonatomic, getter=isPersistent) BOOL persistent;
 
 - (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold NS_DESIGNATED_INITIALIZER;
 
@@ -114,6 +115,13 @@ Class mt_metaClass(Class cls);
  */
 - (BOOL)discardRule:(MTRule *)rule;
 
+/**
+ 保存持久化规则
+ iOS、macOS 和 tvOS 下杀掉 App 后会自动调用。
+ 请在需要保存持久化规则的时候手动调用此方法。
+ */
+- (void)savePersistentRules;
+
 @end
 
 @interface NSObject (MessageThrottle)
@@ -121,7 +129,7 @@ Class mt_metaClass(Class cls);
 @property (nonatomic, readonly) NSArray<MTRule *> *mt_allRules;
 
 /**
- 对方法调用防抖（Debounce）限频，主队列执行
+ 对方法调用防抖（Debounce）限频，主队列执行。
 
  @param selector 限频的方法
  @param durationThreshold 限频的阈值
@@ -130,7 +138,8 @@ Class mt_metaClass(Class cls);
 - (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold;
 
 /**
- 对方法调用限频，主队列执行
+ 对方法调用限频，主队列执行。
+ 如果限频模式为 MTPerformModeFirstly 且 durationThreshold > 5，则会将规则持久化。
 
  @param selector 限频的方法
  @param durationThreshold 限频的阈值
@@ -140,7 +149,8 @@ Class mt_metaClass(Class cls);
 - (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode;
 
 /**
- 对方法调用限频
+ 对方法调用限频。
+ 如果限频模式为 MTPerformModeFirstly 且 durationThreshold > 5，则会将规则持久化。
 
  @param selector 限频的方法
  @param durationThreshold 限频的阈值
@@ -151,7 +161,8 @@ Class mt_metaClass(Class cls);
 - (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
 
 /**
- 对方法调用限频，可以指定方法某种情况下一定会调用
+ 对方法调用限频，可以指定方法某种情况下一定会调用。
+ 如果限频模式为 MTPerformModeFirstly 且 durationThreshold > 5，则会将规则持久化。
  
  @param selector 限频的方法
  @param durationThreshold 限频的阈值
