@@ -379,7 +379,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 {
     for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
         if (!mt_object_isClass(target) &&
-            [target isMemberOfClass:cls] &&
+            object_getClass(target) == cls &&
             [[self.targetSELs objectForKey:target] containsObject:NSStringFromSelector(selector)]) {
             return YES;
         }
@@ -558,22 +558,26 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
 static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
 {
     MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
-    MTRule *rule = mtDealloc.rule;
-    if (!rule) {
-        mtDealloc = objc_getAssociatedObject(object_getClass(invocation.target), invocation.selector);
-        rule = mtDealloc.rule;
-    }
+
     BOOL respondsToAlias = YES;
     Class cls = object_getClass(invocation.target);
+    
     do {
+        if (!mtDealloc.rule) {
+            mtDealloc = objc_getAssociatedObject(cls, invocation.selector);
+        }
         if ((respondsToAlias = [cls instancesRespondToSelector:mtDealloc.rule.aliasSelector])) {
             break;
         }
-    }while (!respondsToAlias && (cls = class_getSuperclass(cls)));
+        mtDealloc = nil;
+    }
+    while (!respondsToAlias && (cls = class_getSuperclass(cls)));
+    
     if (!respondsToAlias) {
         mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
         return;
     }
+    
     [mtDealloc lock];
     mt_handleInvocation(invocation, mtDealloc.rule);
     [mtDealloc unlock];
@@ -584,7 +588,7 @@ static NSString *const MTSubclassSuffix = @"_MessageThrottle_";
 
 /**
  获取实例对象的类。如果 instance 是类对象，则返回元类。
- 作用是兼容 KVO 用子类替换 isa 并覆写 class 方法的场景。
+ 兼容 KVO 用子类替换 isa 并覆写 class 方法的场景。
  */
 static Class mt_classOfTarget(id target)
 {
