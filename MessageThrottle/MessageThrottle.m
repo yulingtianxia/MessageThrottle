@@ -560,11 +560,17 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
     MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
     MTRule *rule = mtDealloc.rule;
     if (!rule) {
-        Class cls = mt_classOfTarget(invocation.target);
-        mtDealloc = objc_getAssociatedObject(cls, invocation.selector);
+        mtDealloc = objc_getAssociatedObject(object_getClass(invocation.target), invocation.selector);
         rule = mtDealloc.rule;
     }
-    if (![assignSlf respondsToSelector:mtDealloc.rule.aliasSelector]) {
+    BOOL respondsToAlias = YES;
+    Class cls = object_getClass(invocation.target);
+    do {
+        if ((respondsToAlias = [cls instancesRespondToSelector:mtDealloc.rule.aliasSelector])) {
+            break;
+        }
+    }while (!respondsToAlias && (cls = class_getSuperclass(cls)));
+    if (!respondsToAlias) {
         mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
         return;
     }
@@ -574,6 +580,7 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
 }
 
 static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";
+static NSString *const MTSubclassSuffix = @"_MessageThrottle_";
 
 /**
  获取实例对象的类。如果 instance 是类对象，则返回元类。
@@ -591,9 +598,52 @@ static Class mt_classOfTarget(id target)
     return cls;
 }
 
+static void mt_hookedGetClass(Class class, Class statedClass) {
+    NSCParameterAssert(class);
+    NSCParameterAssert(statedClass);
+    Method method = class_getInstanceMethod(class, @selector(class));
+    IMP newIMP = imp_implementationWithBlock(^(id self) {
+        return statedClass;
+    });
+    class_replaceMethod(class, @selector(class), newIMP, method_getTypeEncoding(method));
+}
+
 static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
 {
-    Class cls = [target class];
+    Class cls;
+    Class statedClass = [target class];
+    Class baseClass = object_getClass(target);
+    NSString *className = NSStringFromClass(baseClass);
+    
+    if ([className hasSuffix:MTSubclassSuffix]) {
+        cls = baseClass;
+    }
+    else if (mt_object_isClass(target)) {
+        cls = target;
+    }
+    else if (statedClass != baseClass) {
+        cls = baseClass;
+    }
+    else {
+        const char *subclassName = [className stringByAppendingString:MTSubclassSuffix].UTF8String;
+        Class subclass = objc_getClass(subclassName);
+        
+        if (subclass == nil) {
+            subclass = objc_allocateClassPair(baseClass, subclassName, 0);
+            if (subclass == nil) {
+                NSCAssert(NO, @"objc_allocateClassPair failed to allocate class %s.", subclassName);
+                return ;
+            }
+            
+            mt_hookedGetClass(subclass, statedClass);
+            mt_hookedGetClass(object_getClass(subclass), statedClass);
+            objc_registerClassPair(subclass);
+        }
+        
+        object_setClass(target, subclass);
+        
+        cls = subclass;
+    }
     
     Method originMethod = class_getInstanceMethod(cls, selector);
     if (!originMethod) {
@@ -678,7 +728,14 @@ static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector)
         }
     }
     else {
-        cls = [target class];
+        Class baseClass = object_getClass(target);
+        cls = baseClass;
+        NSString *className = NSStringFromClass(baseClass);
+        if ([className hasSuffix:MTSubclassSuffix]) {
+            Class originalClass = NSClassFromString([className stringByReplacingOccurrencesOfString:MTSubclassSuffix withString:@""]);
+            NSCAssert(originalClass != nil, @"Original class must exist");
+            object_setClass(target, originalClass);
+        }
         if ([MTEngine.defaultEngine containsSelector:selector onTarget:cls] ||
             [MTEngine.defaultEngine containsSelector:selector onTargetsOfClass:cls]) {
             return NO;
@@ -714,12 +771,11 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
 
 static void mt_configureTargetDealloc(MTRule *rule)
 {
-    Class cls = mt_classOfTarget(rule.target);
     MTDealloc *mtDealloc = [rule mt_deallocObject];
     if (!mtDealloc) {
         mtDealloc = [MTDealloc new];
         mtDealloc.rule = rule;
-        mtDealloc.cls = cls;
+        mtDealloc.cls = object_getClass(rule.target);
         objc_setAssociatedObject(rule.target, rule.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
     }
 }
