@@ -125,6 +125,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 @property (nonatomic) NSTimeInterval lastTimeRequest;
 @property (nonatomic) NSInvocation *lastInvocation;
 @property (nonatomic) SEL aliasSelector;
+@property (nonatomic, readwrite, getter=isActive) BOOL active;
 
 @end
 
@@ -173,6 +174,11 @@ static const char * mt_blockMethodSignature(id blockObj)
 - (BOOL)discard
 {
     return [MTEngine.defaultEngine discardRule:self];
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"target:%@, selector:%@, durationThreshold:%f, mode:%lu", [self.target description], NSStringFromSelector(self.selector), self.durationThreshold, (unsigned long)self.mode];
 }
 
 #pragma mark Private Method
@@ -393,6 +399,10 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
+            if (target == rule.target) {
+                shouldApply = NO;
+                continue;
+            }
             NSMutableSet *selectors = [self.targetSELs objectForKey:target];
             for (NSString *selectorName in selectors) {
                 if (sel_isEqual(rule.selector, NSSelectorFromString(selectorName))
@@ -409,6 +419,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
             [self addSelector:rule.selector onTarget:rule.target];
             mt_overrideMethod(rule.target, rule.selector, rule.aliasSelector);
             mt_configureTargetDealloc(rule);
+            rule.active = YES;
         }
     }
     else {
@@ -425,6 +436,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     if (mt_checkRuleValid(rule)) {
         [self removeSelector:rule.selector onTarget:rule.target];
         shouldDiscard = mt_recoverMethod(rule.target, rule.selector, rule.aliasSelector);
+        rule.active = NO;
     }
     pthread_mutex_unlock(&mutex);
     return shouldDiscard;
@@ -440,6 +452,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
         ![self containsSelector:rule.selector onTargetsOfClass:mtDealloc.cls]) {
         mt_revertHook(mtDealloc.cls, rule.selector, rule.aliasSelector);
     }
+    rule.active = NO;
     pthread_mutex_unlock(&mutex);
 }
 

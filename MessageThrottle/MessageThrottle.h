@@ -74,6 +74,11 @@ Class mt_metaClass(Class cls);
  */
 @property (nonatomic, getter=isPersistent) BOOL persistent;
 
+/**
+ 规则是否在生效。
+ */
+@property (nonatomic, readonly, getter=isActive) BOOL active;
+
 - (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;
@@ -81,14 +86,14 @@ Class mt_metaClass(Class cls);
 /**
  应用规则，会覆盖已有的规则
  
- @return 更新成功返回 YES；如果规则不合法或继承链上已有相同 selector 的规则，则返回 NO
+ @return 更新成功返回 YES；如果规则正在生效中、不合法或继承链上已有相同 selector 的规则，则返回 NO
  */
 - (BOOL)apply;
 
 /**
  废除规则
  
- @return 废除成功返回 YES；如果规则不存在或不合法，或者废除 target 对象后依然存在 target 为类的规则，则返回 NO
+ @return 废除成功返回 YES；如果规则不存在或不合法，或者废除后依然需要保留 hook，则返回 NO
  */
 - (BOOL)discard;
 
@@ -103,7 +108,7 @@ Class mt_metaClass(Class cls);
  应用规则，会覆盖已有的规则
 
  @param rule MTRule 对象
- @return 更新成功返回 YES；如果规则不合法或继承链上已有相同 selector 的规则，则返回 NO
+ @return 更新成功返回 YES；如果规则正在生效中、不合法或继承链上已有相同 selector 的规则，则返回 NO
  */
 - (BOOL)applyRule:(MTRule *)rule;
 
@@ -111,7 +116,7 @@ Class mt_metaClass(Class cls);
  废除规则
 
  @param rule MTRule 对象
- @return 废除成功返回 YES；如果规则不存在或不合法，或者废除 target 对象后依然存在 target 为类的规则，则返回 NO
+ @return 废除成功返回 YES；如果规则早已被废除过、不合法，或者废除后依然需要保留 hook，则返回 NO
  */
 - (BOOL)discardRule:(MTRule *)rule;
 
@@ -126,6 +131,9 @@ Class mt_metaClass(Class cls);
 
 @interface NSObject (MessageThrottle)
 
+/**
+ 获取自己以及自己的类上面所有的限频规则。
+ */
 @property (nonatomic, readonly) NSArray<MTRule *> *mt_allRules;
 
 /**
