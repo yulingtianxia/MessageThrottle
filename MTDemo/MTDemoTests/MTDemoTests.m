@@ -127,6 +127,7 @@
 - (void)testDiscardRule {
     [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
     [self.sstub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
+    [self.stub foo:[NSDate date]];
     for (MTRule *rule in self.stub.mt_allRules) {
         [rule discard];
     }
@@ -136,7 +137,7 @@
     [self.stub foo:[NSDate date]];
     [self.sstub foo:[NSDate date]];
     for (MTRule *rule in MTEngine.defaultEngine.allRules) {
-        NSLog(@"%@", rule.description);
+        NSCAssert(rule.target != self.stub && rule.target != self.sstub, @"This rule is not discard!");
     }
 }
 
@@ -191,30 +192,77 @@
 {
     MTRule *rule = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
     [self.sstub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
-    rule.alwaysInvokeBlock =  ^(MTRule *rule, NSDate *date) {
-        return YES;
-    };
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (int i = 0; i < 1000; i ++) {
+        for (int i = 0; i < 10000; i ++) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [rule apply];
+            });
+        }
+    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        for (int i = 0; i < 10000; i ++) {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 [self.stub foo:[NSDate date]];
             });
         }
     });
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (int i = 0; i < 1000; i ++) {
+        for (int i = 0; i < 10000; i ++) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [rule discard];
+            });
+        }
+    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        for (int i = 0; i < 10000; i ++) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [self.stub foo:[NSDate date]];
+            });
+        }
+    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        for (int i = 0; i < 10000; i ++) {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 [self.sstub foo:[NSDate date]];
             });
         }
     });
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (int i = 0; i < 1000; i ++) {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [self.stub foo:[NSDate date]];
-            });
-        }
-    });
+}
+
+- (void)testApplyRuleThenKVO
+{
+    MTRule *rule = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
+    [self.stub addObserver:self forKeyPath:@"bar" options:NSKeyValueObservingOptionNew context:nil];
+    NSCAssert((rule.durationThreshold == 0.01 && rule.mode == MTPerformModeDebounce), @"rule not correct!");
+    [self.stub foo:[NSDate date]];
+    [self.stub removeObserver:self forKeyPath:@"bar"];
+    
+    [rule discard];
+    
+//    [self.stub removeObserver:self forKeyPath:@"bar"];
+    
+    [self.stub foo:[NSDate date]];
+}
+
+- (void)testKVOThenApplyRule
+{
+    self.stub.bar = [NSObject new];
+    [self.stub addObserver:self forKeyPath:@"bar" options:NSKeyValueObservingOptionNew context:nil];
+    MTRule *rule = [self.stub mt_limitSelector:@selector(bar) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
+    NSCAssert((rule.durationThreshold == 0.01 && rule.mode == MTPerformModeDebounce), @"rule not correct!");
+    NSObject *bar = self.stub.bar;
+    [self.stub removeObserver:self forKeyPath:@"bar"];
+    [rule discard];
+//    [self.stub removeObserver:self forKeyPath:@"bar"];
+    bar = self.stub.bar;
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
+{
+    if ([keyPath isEqualToString:@"bar"] && object == self.stub) {
+        NSLog(@"do nothing...");
+    }
+    [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }
 
 @end

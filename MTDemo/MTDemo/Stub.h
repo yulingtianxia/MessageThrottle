@@ -13,6 +13,8 @@ extern NSString * const MTStubFooNotification;
 
 @interface Stub : SuperStub
 
+@property (nonatomic) NSObject *bar;
+
 - (void)foo:(NSDate *)arg;
 + (void)foo:(NSDate *)arg;
 

@@ -396,6 +396,8 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 - (BOOL)applyRule:(MTRule *)rule
 {
     pthread_mutex_lock(&mutex);
+    MTDealloc *mtDealloc = [rule mt_deallocObject];
+    [mtDealloc lock];
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
@@ -425,6 +427,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     else {
         shouldApply = NO;
     }
+    [mtDealloc unlock];
     pthread_mutex_unlock(&mutex);
     return shouldApply;
 }
@@ -432,12 +435,16 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 - (BOOL)discardRule:(MTRule *)rule
 {
     pthread_mutex_lock(&mutex);
+    MTDealloc *mtDealloc = [rule mt_deallocObject];
+    [mtDealloc lock];
     BOOL shouldDiscard = NO;
     if (mt_checkRuleValid(rule)) {
         [self removeSelector:rule.selector onTarget:rule.target];
         shouldDiscard = mt_recoverMethod(rule.target, rule.selector, rule.aliasSelector);
         rule.active = NO;
+//        mt_removeTargetDealloc(rule);
     }
+    [mtDealloc unlock];
     pthread_mutex_unlock(&mutex);
     return shouldDiscard;
 }
@@ -448,11 +455,13 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
         return;
     }
     pthread_mutex_lock(&mutex);
+    [[rule mt_deallocObject] lock];
     if (![self containsSelector:rule.selector onTarget:mtDealloc.cls] &&
         ![self containsSelector:rule.selector onTargetsOfClass:mtDealloc.cls]) {
         mt_revertHook(mtDealloc.cls, rule.selector, rule.aliasSelector);
     }
     rule.active = NO;
+    [[rule mt_deallocObject] unlock];
     pthread_mutex_unlock(&mutex);
 }
 
@@ -526,6 +535,14 @@ static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
  */
 static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
 {
+    NSCParameterAssert(invocation);
+    NSCParameterAssert(rule);
+    
+    if (!rule.isActive) {
+        [invocation invoke];
+        return;
+    }
+    
     if (rule.durationThreshold <= 0 || mt_invokeFilterBlock(rule, invocation)) {
         invocation.selector = rule.aliasSelector;
         [invocation invoke];
@@ -549,6 +566,9 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
                 rule.lastTimeRequest = now;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
+                    if (!rule.isActive) {
+                        rule.lastInvocation.selector = rule.selector;
+                    }
                     [rule.lastInvocation invoke];
                     rule.lastInvocation = nil;
                 });
@@ -560,6 +580,9 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
             [rule.lastInvocation retainArguments];
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
                 if (rule.lastInvocation == invocation) {
+                    if (!rule.isActive) {
+                        rule.lastInvocation.selector = rule.selector;
+                    }
                     [rule.lastInvocation invoke];
                     rule.lastInvocation = nil;
                 }
@@ -597,7 +620,7 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
 }
 
 static NSString *const MTForwardInvocationSelectorName = @"__mt_forwardInvocation:";
-static NSString *const MTSubclassSuffix = @"_MessageThrottle_";
+static NSString *const MTSubclassPrefix = @"_MessageThrottle_";
 
 /**
  获取实例对象的类。如果 instance 是类对象，则返回元类。
@@ -625,14 +648,14 @@ static void mt_hookedGetClass(Class class, Class statedClass) {
     class_replaceMethod(class, @selector(class), newIMP, method_getTypeEncoding(method));
 }
 
-static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
+static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
 {
     Class cls;
     Class statedClass = [target class];
     Class baseClass = object_getClass(target);
     NSString *className = NSStringFromClass(baseClass);
     
-    if ([className hasSuffix:MTSubclassSuffix]) {
+    if ([className hasPrefix:MTSubclassPrefix]) {
         cls = baseClass;
     }
     else if (mt_object_isClass(target)) {
@@ -642,14 +665,14 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
         cls = baseClass;
     }
     else {
-        const char *subclassName = [className stringByAppendingString:MTSubclassSuffix].UTF8String;
+        const char *subclassName = [MTSubclassPrefix stringByAppendingString:className].UTF8String;
         Class subclass = objc_getClass(subclassName);
         
         if (subclass == nil) {
             subclass = objc_allocateClassPair(baseClass, subclassName, 0);
             if (subclass == nil) {
                 NSCAssert(NO, @"objc_allocateClassPair failed to allocate class %s.", subclassName);
-                return ;
+                return NO;
             }
             
             mt_hookedGetClass(subclass, statedClass);
@@ -665,7 +688,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
     Method originMethod = class_getInstanceMethod(cls, selector);
     if (!originMethod) {
         NSCAssert(NO, @"unrecognized selector -%@ for class %@", NSStringFromSelector(selector), NSStringFromClass(cls));
-        return;
+        return NO;
     }
     const char *originType = (char *)method_getTypeEncoding(originMethod);
     
@@ -689,7 +712,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
 #endif
     
     if (originalImp == msgForwardIMP) {
-        return;
+        return NO;
     }
     
     if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) != (IMP)mt_forwardInvocation) {
@@ -708,6 +731,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
     // Replace the original selector at last, preventing threading issus when
     // the selector get called during the execution of `overrideMethod`
     class_replaceMethod(cls, selector, msgForwardIMP, originType);
+    return YES;
 }
 
 static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
@@ -745,13 +769,17 @@ static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector)
         }
     }
     else {
-        Class baseClass = object_getClass(target);
-        cls = baseClass;
-        NSString *className = NSStringFromClass(baseClass);
-        if ([className hasSuffix:MTSubclassSuffix]) {
-            Class originalClass = NSClassFromString([className stringByReplacingOccurrencesOfString:MTSubclassSuffix withString:@""]);
+        MTDealloc *mtDealloc = objc_getAssociatedObject(target, selector);
+        // get class when apply rule on target.
+        cls = mtDealloc.cls;
+        // target current real class name
+        NSString *className = NSStringFromClass(object_getClass(target));
+        if ([className hasPrefix:MTSubclassPrefix]) {
+            Class originalClass = NSClassFromString([className stringByReplacingOccurrencesOfString:MTSubclassPrefix withString:@""]);
             NSCAssert(originalClass != nil, @"Original class must exist");
-            object_setClass(target, originalClass);
+            if (originalClass) {
+                object_setClass(target, originalClass);
+            }
         }
         if ([MTEngine.defaultEngine containsSelector:selector onTarget:cls] ||
             [MTEngine.defaultEngine containsSelector:selector onTargetsOfClass:cls]) {

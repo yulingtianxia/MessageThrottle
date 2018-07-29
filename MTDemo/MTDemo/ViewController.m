@@ -15,6 +15,7 @@
 @interface ViewController ()
 
 @property (nonatomic) Stub *stub;
+
 @property (weak, nonatomic) IBOutlet UILabel *label;
 
 @end
@@ -38,7 +39,7 @@
 //    [MTEngine.defaultEngine applyRule:rule];
     
     // 跟上面的用法等价
-    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.5 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
+    __unused MTRule *rule = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.5 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
         if ([date isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]]) {
             return YES;
         }
@@ -49,12 +50,12 @@
 //    self.stub = nil;
     
     for (MTRule *rule in rules) {
+//        rule.persistent = YES;
         NSLog(@"%@", rule);
         NSLog(@"%p", rule.selector);
     }
     
 //    [MTEngine.defaultEngine discardRule:rule];
-    
 }
 
 - (IBAction)tapFoo:(UIButton *)sender {
