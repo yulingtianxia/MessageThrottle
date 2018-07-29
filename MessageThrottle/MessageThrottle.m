@@ -442,7 +442,6 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
         [self removeSelector:rule.selector onTarget:rule.target];
         shouldDiscard = mt_recoverMethod(rule.target, rule.selector, rule.aliasSelector);
         rule.active = NO;
-//        mt_removeTargetDealloc(rule);
     }
     [mtDealloc unlock];
     pthread_mutex_unlock(&mutex);
@@ -455,13 +454,13 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
         return;
     }
     pthread_mutex_lock(&mutex);
-    [[rule mt_deallocObject] lock];
+    [mtDealloc lock];
     if (![self containsSelector:rule.selector onTarget:mtDealloc.cls] &&
         ![self containsSelector:rule.selector onTargetsOfClass:mtDealloc.cls]) {
         mt_revertHook(mtDealloc.cls, rule.selector, rule.aliasSelector);
     }
     rule.active = NO;
-    [[rule mt_deallocObject] unlock];
+    [mtDealloc unlock];
     pthread_mutex_unlock(&mutex);
 }
 
@@ -594,7 +593,7 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
 static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
 {
     MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
-
+    
     BOOL respondsToAlias = YES;
     Class cls = object_getClass(invocation.target);
     
@@ -609,13 +608,15 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
     }
     while (!respondsToAlias && (cls = class_getSuperclass(cls)));
     
+    [mtDealloc lock];
+    
     if (!respondsToAlias) {
         mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
-        return;
+    }
+    else {
+        mt_handleInvocation(invocation, mtDealloc.rule);
     }
     
-    [mtDealloc lock];
-    mt_handleInvocation(invocation, mtDealloc.rule);
     [mtDealloc unlock];
 }
 
@@ -793,8 +794,7 @@ static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector)
 static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
 {
     SEL origForwardSelector = NSSelectorFromString(MTForwardInvocationSelectorName);
-    
-    if ([slf respondsToSelector:origForwardSelector]) {
+    if ([object_getClass(slf) instancesRespondToSelector:origForwardSelector]) {
         NSMethodSignature *methodSignature = [slf methodSignatureForSelector:origForwardSelector];
         if (!methodSignature) {
             NSCAssert(NO, @"unrecognized selector -%@ for instance %@", NSStringFromSelector(origForwardSelector), slf);
