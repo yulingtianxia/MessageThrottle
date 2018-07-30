@@ -186,6 +186,12 @@ static const char * mt_blockMethodSignature(id blockObj)
 - (MTDealloc *)mt_deallocObject
 {
     MTDealloc *mtDealloc = objc_getAssociatedObject(self.target, self.selector);
+    if (!mtDealloc) {
+        mtDealloc = [MTDealloc new];
+        mtDealloc.rule = self;
+        mtDealloc.cls = object_getClass(self.target);
+        objc_setAssociatedObject(self.target, self.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
+    }
     return mtDealloc;
 }
 
@@ -419,10 +425,9 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
                 }
             }
         }
-        shouldApply = shouldApply && mt_overrideMethod(rule.target, rule.selector, rule.aliasSelector);
+        shouldApply = shouldApply && mt_overrideMethod(rule);
         if (shouldApply) {
             [self addSelector:rule.selector onTarget:rule.target];
-            mt_configureTargetDealloc(rule);
             rule.active = YES;
         }
     }
@@ -702,8 +707,11 @@ static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
     return msgForwardIMP;
 }
 
-static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
+static BOOL mt_overrideMethod(MTRule *rule)
 {
+    id target = rule.target;
+    SEL selector = rule.selector;
+    SEL aliasSelector = rule.aliasSelector;
     Class cls;
     Class statedClass = [target class];
     Class baseClass = object_getClass(target);
@@ -746,6 +754,8 @@ static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
         }
     }
     
+    [rule mt_deallocObject].cls = cls;
+    
     mt_swizzleForwardInvocation(cls);
     
     Class superCls = class_getSuperclass(cls);
@@ -778,10 +788,12 @@ static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
         class_replaceMethod(cls, selector, originalIMP, typeEncoding);
     }
     
-    Method originalMethod = class_getInstanceMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName));
-    Method objectMethod = class_getInstanceMethod(NSObject.class, @selector(forwardInvocation:));
-    IMP originalImplementation = method_getImplementation(originalMethod ?: objectMethod);
-    class_replaceMethod(cls, @selector(forwardInvocation:), originalImplementation, "v@:@");
+    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) == (IMP)mt_forwardInvocation) {
+        Method originalMethod = class_getInstanceMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName));
+        Method objectMethod = class_getInstanceMethod(NSObject.class, @selector(forwardInvocation:));
+        IMP originalImplementation = method_getImplementation(originalMethod ?: objectMethod);
+        class_replaceMethod(cls, @selector(forwardInvocation:), originalImplementation, "v@:@");
+    }
 }
 
 static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector)
@@ -835,17 +847,6 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
         void (*superForwardIMP)(id, SEL, NSInvocation *);
         superForwardIMP = (void (*)(id, SEL, NSInvocation *))method_getImplementation(superForwardMethod);
         superForwardIMP(slf, @selector(forwardInvocation:), invocation);
-    }
-}
-
-static void mt_configureTargetDealloc(MTRule *rule)
-{
-    MTDealloc *mtDealloc = [rule mt_deallocObject];
-    if (!mtDealloc) {
-        mtDealloc = [MTDealloc new];
-        mtDealloc.rule = rule;
-        mtDealloc.cls = object_getClass(rule.target);
-        objc_setAssociatedObject(rule.target, rule.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
     }
 }
 
