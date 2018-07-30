@@ -130,7 +130,7 @@
     MTRule *rule1 = [mt_metaClass(Stub.class) mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
     [rule1 discard];
     MTRule *rule2 = [mt_metaClass(SuperStub.class) mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
-    [self.stub foo:[NSDate date]];
+    [Stub foo:[NSDate date]];
     [rule2 discard];
 }
 

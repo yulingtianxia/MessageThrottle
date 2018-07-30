@@ -413,10 +413,13 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
                     Class clsA = rule.target;
                     Class clsB = target;
                     shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]) && shouldApply;
-                    NSCAssert(shouldApply, @"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", selectorName, NSStringFromClass(clsB));
+                    NSLog(@"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", selectorName, NSStringFromClass(clsB));
                 }
             }
         }
+        // TODO: check has subclass hooked!
+//        MTDealloc *mtDealloc = objc_getAssociatedObject(rule.target, rule.selector);
+        
         if (shouldApply) {
             [self addSelector:rule.selector onTarget:rule.target];
             mt_overrideMethod(rule.target, rule.selector, rule.aliasSelector);
@@ -668,7 +671,9 @@ static BOOL mt_isMsgForwardIMP(IMP impl)
 static void mt_swizzleForwardInvocation(Class cls)
 {
     NSCParameterAssert(cls);
-    // If there is no method, replace will act like class_addMethod.
+    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) == (IMP)mt_forwardInvocation) {
+        return;
+    }
     IMP originalImplementation = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
     if (originalImplementation) {
         class_addMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName), originalImplementation, "v@:@");
@@ -734,16 +739,18 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
         object_setClass(target, subclass);
         cls = subclass;
     }
-    
+    Class superCls = class_getSuperclass(cls);
     Method targetMethod = class_getInstanceMethod(cls, selector);
     IMP targetMethodIMP = method_getImplementation(targetMethod);
-    if (mt_isMsgForwardIMP(targetMethodIMP)) {
+    if (!mt_isMsgForwardIMP(targetMethodIMP)) {
         const char *typeEncoding = method_getTypeEncoding(targetMethod);
-        if (![cls instancesRespondToSelector:aliasSelector]) {
+        Method targetAliasMethod = class_getInstanceMethod(cls, aliasSelector);
+        Method targetAliasMethodSuper = class_getInstanceMethod(superCls, aliasSelector);
+        if (![cls instancesRespondToSelector:aliasSelector] || targetAliasMethod == targetAliasMethodSuper) {
             __unused BOOL addedAlias = class_addMethod(cls, aliasSelector, method_getImplementation(targetMethod), typeEncoding);
             NSCAssert(addedAlias, @"Original implementation for %@ is already copied to %@ on %@", NSStringFromSelector(selector), NSStringFromSelector(aliasSelector), cls);
         }
-        class_replaceMethod(cls, selector, mt_getMsgForwardIMP(cls, selector), typeEncoding);
+        class_replaceMethod(cls, selector, mt_getMsgForwardIMP(statedClass, selector), typeEncoding);
     }
     
     return;
