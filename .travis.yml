@@ -14,9 +14,9 @@ before_deploy:
 - carthage build --no-skip-current
 - carthage archive $FRAMEWORK_NAME
 script:
-- xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone X,OS=11.4' ONLY_ACTIVE_ARCH=NO build test
+- xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone X,OS=11.4' ONLY_ACTIVE_ARCH=NO GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=YES GCC_GENERATE_TEST_COVERAGE_FILES=YES build test
 after_success:
-- bash <(curl -s https://codecov.io/bash) -J 'MTDemo' -t 35c5aef9-603e-4c0d-acd4-314df33f1631
+- bash <(curl -s https://codecov.io/bash)
 deploy:
   provider: releases
   api_key:
