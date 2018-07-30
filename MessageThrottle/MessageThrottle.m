@@ -645,7 +645,8 @@ static Class mt_classOfTarget(id target)
     return cls;
 }
 
-static void mt_hookedGetClass(Class class, Class statedClass) {
+static void mt_hookedGetClass(Class class, Class statedClass)
+{
     NSCParameterAssert(class);
     NSCParameterAssert(statedClass);
     Method method = class_getInstanceMethod(class, @selector(class));
@@ -655,52 +656,29 @@ static void mt_hookedGetClass(Class class, Class statedClass) {
     class_replaceMethod(class, @selector(class), newIMP, method_getTypeEncoding(method));
 }
 
-static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
+static BOOL mt_isMsgForwardIMP(IMP impl)
 {
-    Class cls;
-    Class statedClass = [target class];
-    Class baseClass = object_getClass(target);
-    NSString *className = NSStringFromClass(baseClass);
-    
-    if ([className hasPrefix:MTSubclassPrefix]) {
-        cls = baseClass;
+    return impl == _objc_msgForward
+#if !defined(__arm64__)
+    || impl == (IMP)_objc_msgForward_stret
+#endif
+    ;
+}
+
+static void mt_swizzleForwardInvocation(Class cls)
+{
+    NSCParameterAssert(cls);
+    // If there is no method, replace will act like class_addMethod.
+    IMP originalImplementation = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
+    if (originalImplementation) {
+        class_addMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName), originalImplementation, "v@:@");
     }
-    else if (mt_object_isClass(target)) {
-        cls = target;
-    }
-    else if (statedClass != baseClass) {
-        cls = baseClass;
-    }
-    else {
-        const char *subclassName = [MTSubclassPrefix stringByAppendingString:className].UTF8String;
-        Class subclass = objc_getClass(subclassName);
-        
-        if (subclass == nil) {
-            subclass = objc_allocateClassPair(baseClass, subclassName, 0);
-            if (subclass == nil) {
-                NSCAssert(NO, @"objc_allocateClassPair failed to allocate class %s.", subclassName);
-                return NO;
-            }
-            
-            mt_hookedGetClass(subclass, statedClass);
-            mt_hookedGetClass(object_getClass(subclass), statedClass);
-            objc_registerClassPair(subclass);
-        }
-        
-        object_setClass(target, subclass);
-        
-        cls = subclass;
-    }
-    
+}
+
+static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
+{
     Method originMethod = class_getInstanceMethod(cls, selector);
-    if (!originMethod) {
-        NSCAssert(NO, @"unrecognized selector -%@ for class %@", NSStringFromSelector(selector), NSStringFromClass(cls));
-        return NO;
-    }
     const char *originType = (char *)method_getTypeEncoding(originMethod);
-    
-    IMP originalImp = class_respondsToSelector(cls, selector) ? class_getMethodImplementation(cls, selector) : NULL;
-    
     IMP msgForwardIMP = _objc_msgForward;
 #if !defined(__arm64__)
     if (originType[0] == _C_STRUCT_B) {
@@ -717,53 +695,80 @@ static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
         }
     }
 #endif
+    return msgForwardIMP;
+}
+
+static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
+{
+    Class cls;
+    Class statedClass = [target class];
+    Class baseClass = object_getClass(target);
+    NSString *className = NSStringFromClass(baseClass);
     
-    if (originalImp == msgForwardIMP) {
-        return NO;
+    if ([className hasPrefix:MTSubclassPrefix]) {
+        cls = baseClass;
     }
-    
-    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) != (IMP)mt_forwardInvocation) {
-        IMP originalForwardImp = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
-        if (originalForwardImp) {
-            class_addMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName), originalForwardImp, "v@:@");
+    else if (mt_object_isClass(target)) {
+        cls = target;
+        mt_swizzleForwardInvocation(cls);
+    }
+    else if (statedClass != baseClass) {
+        cls = baseClass;
+        mt_swizzleForwardInvocation(cls);
+    }
+    else {
+        const char *subclassName = [MTSubclassPrefix stringByAppendingString:className].UTF8String;
+        Class subclass = objc_getClass(subclassName);
+        
+        if (subclass == nil) {
+            subclass = objc_allocateClassPair(baseClass, subclassName, 0);
+            if (subclass == nil) {
+                NSCAssert(NO, @"objc_allocateClassPair failed to allocate class %s.", subclassName);
+                return;
+            }
+            mt_swizzleForwardInvocation(subclass);
+            mt_hookedGetClass(subclass, statedClass);
+            mt_hookedGetClass(object_getClass(subclass), statedClass);
+            objc_registerClassPair(subclass);
         }
+        
+        object_setClass(target, subclass);
+        
+        cls = subclass;
     }
     
-    if (class_respondsToSelector(cls, selector)) {
-        if(!class_respondsToSelector(cls, aliasSelector)) {
-            class_addMethod(cls, aliasSelector, originalImp, originType);
+    Method targetMethod = class_getInstanceMethod(cls, selector);
+    IMP targetMethodIMP = method_getImplementation(targetMethod);
+    if (mt_isMsgForwardIMP(targetMethodIMP)) {
+        const char *typeEncoding = method_getTypeEncoding(targetMethod);
+        if (![cls instancesRespondToSelector:aliasSelector]) {
+            __unused BOOL addedAlias = class_addMethod(cls, aliasSelector, method_getImplementation(targetMethod), typeEncoding);
+            NSCAssert(addedAlias, @"Original implementation for %@ is already copied to %@ on %@", NSStringFromSelector(selector), NSStringFromSelector(aliasSelector), cls);
         }
+        class_replaceMethod(cls, selector, mt_getMsgForwardIMP(cls, selector), typeEncoding);
     }
     
-    // Replace the original selector at last, preventing threading issus when
-    // the selector get called during the execution of `overrideMethod`
-    class_replaceMethod(cls, selector, msgForwardIMP, originType);
-    return YES;
+    return;
 }
 
 static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
 {
-    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) == (IMP)mt_forwardInvocation) {
-        IMP originalForwardImp = class_getMethodImplementation(cls, NSSelectorFromString(MTForwardInvocationSelectorName));
-        if (originalForwardImp) {
-            class_replaceMethod(cls, @selector(forwardInvocation:), originalForwardImp, "v@:@");
-        }
-    }
-    else {
-        return;
+    Method targetMethod = class_getInstanceMethod(cls, selector);
+    IMP targetMethodIMP = method_getImplementation(targetMethod);
+    if (mt_isMsgForwardIMP(targetMethodIMP)) {
+        // Restore the original method implementation.
+        const char *typeEncoding = method_getTypeEncoding(targetMethod);
+        Method originalMethod = class_getInstanceMethod(cls, aliasSelector);
+        IMP originalIMP = method_getImplementation(originalMethod);
+        NSCAssert(originalMethod, @"Original implementation for %@ not found %@ on %@", NSStringFromSelector(selector), NSStringFromSelector(aliasSelector), cls);
+        class_replaceMethod(cls, selector, originalIMP, typeEncoding);
     }
     
-    Method originMethod = class_getInstanceMethod(cls, selector);
-    if (!originMethod) {
-        NSCAssert(NO, @"unrecognized selector -%@ for class %@", NSStringFromSelector(selector), NSStringFromClass(cls));
-        return;
-    }
-    const char *originType = (char *)method_getTypeEncoding(originMethod);
-    
-    if (class_respondsToSelector(cls, aliasSelector)) {
-        IMP originalImp = class_getMethodImplementation(cls, aliasSelector);
-        class_replaceMethod(cls, selector, originalImp, originType);
-    }
+    Method originalMethod = class_getInstanceMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName));
+    Method objectMethod = class_getInstanceMethod(NSObject.class, @selector(forwardInvocation:));
+    // There is no class_removeMethod, so the best we can do is to retore the original implementation, or use a dummy.
+    IMP originalImplementation = method_getImplementation(originalMethod ?: objectMethod);
+    class_replaceMethod(cls, @selector(forwardInvocation:), originalImplementation, "v@:@");
 }
 
 static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector)

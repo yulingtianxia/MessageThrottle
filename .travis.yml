@@ -16,7 +16,7 @@ before_deploy:
 script:
 - xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone X,OS=11.4' ONLY_ACTIVE_ARCH=NO build test
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash) -J 'MTDemo' -t 35c5aef9-603e-4c0d-acd4-314df33f1631
 deploy:
   provider: releases
   api_key:
