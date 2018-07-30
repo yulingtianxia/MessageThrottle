@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		A4092CDF1FAAFB1B00F6935B /* Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CDE1FAAFB1B00F6935B /* Stub.m */; };
 		A4092CE21FAAFB2F00F6935B /* SuperStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CE11FAAFB2F00F6935B /* SuperStub.m */; };
+		A4371D79210F2A9E00153E3C /* SuperStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CE11FAAFB2F00F6935B /* SuperStub.m */; };
+		A4371D7A210F2AAD00153E3C /* Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CDE1FAAFB1B00F6935B /* Stub.m */; };
 		A48995331FAE2F6200A7A58A /* MessageThrottleKit.h in Headers */ = {isa = PBXBuildFile; fileRef = A48995311FAE2F6200A7A58A /* MessageThrottleKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A489953C1FAE2F8400A7A58A /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
 		A489953D1FAE3EC600A7A58A /* MessageThrottle.h in Headers */ = {isa = PBXBuildFile; fileRef = A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -378,7 +380,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				A4DB9F0D1FA70A0700826A8F /* MessageThrottle.m in Sources */,
+				A4371D79210F2A9E00153E3C /* SuperStub.m in Sources */,
 				A4DB9EF11FA709A400826A8F /* MTDemoTests.m in Sources */,
+				A4371D7A210F2AAD00153E3C /* Stub.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -592,7 +592,13 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
 
 static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
 {
-    MTDealloc *mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
+    MTDealloc *mtDealloc = nil;
+    if (!mt_object_isClass(invocation.target)) {
+        mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
+    }
+    else {
+        mtDealloc = objc_getAssociatedObject(object_getClass(invocation.target), invocation.selector);
+    }
     
     BOOL respondsToAlias = YES;
     Class cls = object_getClass(invocation.target);
