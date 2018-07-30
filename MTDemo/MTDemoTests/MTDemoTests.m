@@ -267,7 +267,7 @@
 {
     MTRule *rule = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
     [self.stub addObserver:self forKeyPath:@"bar" options:NSKeyValueObservingOptionNew context:nil];
-    NSCAssert((rule.durationThreshold == 0.01 && rule.mode == MTPerformModeDebounce), @"rule not correct!");
+    NSCAssert(!rule || (rule.durationThreshold == 0.01 && rule.mode == MTPerformModeDebounce), @"rule not correct!");
     [self.stub foo:[NSDate date]];
     [self.stub removeObserver:self forKeyPath:@"bar"];
     

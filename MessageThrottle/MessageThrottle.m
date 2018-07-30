@@ -419,16 +419,9 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
                 }
             }
         }
-        // check has subclass hooked!
-        for (Class cls in self.classHooked) {
-            if (mt_object_isClass(rule.target) && [cls isSubclassOfClass:rule.target]) {
-                shouldApply = NO;
-                NSLog(@"Sorry: %@ used to be applied, can't apply it's super class %@!", NSStringFromClass(cls), NSStringFromClass(rule.target));
-            }
-        }
+        shouldApply = shouldApply && mt_overrideMethod(rule.target, rule.selector, rule.aliasSelector);
         if (shouldApply) {
             [self addSelector:rule.selector onTarget:rule.target];
-            mt_overrideMethod(rule.target, rule.selector, rule.aliasSelector);
             mt_configureTargetDealloc(rule);
             rule.active = YES;
         }
@@ -709,7 +702,7 @@ static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
     return msgForwardIMP;
 }
 
-static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
+static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
 {
     Class cls;
     Class statedClass = [target class];
@@ -735,7 +728,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
             subclass = objc_allocateClassPair(baseClass, subclassName, 0);
             if (subclass == nil) {
                 NSLog(@"objc_allocateClassPair failed to allocate class %s.", subclassName);
-                return;
+                return NO;
             }
             mt_swizzleForwardInvocation(subclass);
             mt_hookedGetClass(subclass, statedClass);
@@ -745,6 +738,15 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
         object_setClass(target, subclass);
         cls = subclass;
     }
+    
+    // check has subclass hooked!
+    for (Class clsHooked in MTEngine.defaultEngine.classHooked) {
+        if (clsHooked != cls && [clsHooked isSubclassOfClass:cls]) {
+            NSLog(@"Sorry: %@ used to be applied, can't apply it's super class %@!", NSStringFromClass(cls), NSStringFromClass(cls));
+            return NO;
+        }
+    }
+    
     Class superCls = class_getSuperclass(cls);
     Method targetMethod = class_getInstanceMethod(cls, selector);
     IMP targetMethodIMP = method_getImplementation(targetMethod);
@@ -760,7 +762,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
         [MTEngine.defaultEngine.classHooked addObject:cls];
     }
     
-    return;
+    return YES;
 }
 
 static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
