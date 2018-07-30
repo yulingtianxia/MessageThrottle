@@ -730,7 +730,6 @@ static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
                 NSLog(@"objc_allocateClassPair failed to allocate class %s.", subclassName);
                 return NO;
             }
-            mt_swizzleForwardInvocation(subclass);
             mt_hookedGetClass(subclass, statedClass);
             mt_hookedGetClass(object_getClass(subclass), statedClass);
             objc_registerClassPair(subclass);
@@ -746,6 +745,8 @@ static BOOL mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
             return NO;
         }
     }
+    
+    mt_swizzleForwardInvocation(cls);
     
     Class superCls = class_getSuperclass(cls);
     Method targetMethod = class_getInstanceMethod(cls, selector);
