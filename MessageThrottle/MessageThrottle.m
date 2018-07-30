@@ -723,7 +723,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
         if (subclass == nil) {
             subclass = objc_allocateClassPair(baseClass, subclassName, 0);
             if (subclass == nil) {
-                NSCAssert(NO, @"objc_allocateClassPair failed to allocate class %s.", subclassName);
+                NSLog(@"objc_allocateClassPair failed to allocate class %s.", subclassName);
                 return;
             }
             mt_swizzleForwardInvocation(subclass);
@@ -731,9 +731,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
             mt_hookedGetClass(object_getClass(subclass), statedClass);
             objc_registerClassPair(subclass);
         }
-        
         object_setClass(target, subclass);
-        
         cls = subclass;
     }
     
@@ -756,7 +754,6 @@ static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
     Method targetMethod = class_getInstanceMethod(cls, selector);
     IMP targetMethodIMP = method_getImplementation(targetMethod);
     if (mt_isMsgForwardIMP(targetMethodIMP)) {
-        // Restore the original method implementation.
         const char *typeEncoding = method_getTypeEncoding(targetMethod);
         Method originalMethod = class_getInstanceMethod(cls, aliasSelector);
         IMP originalIMP = method_getImplementation(originalMethod);
@@ -766,7 +763,6 @@ static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
     
     Method originalMethod = class_getInstanceMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName));
     Method objectMethod = class_getInstanceMethod(NSObject.class, @selector(forwardInvocation:));
-    // There is no class_removeMethod, so the best we can do is to retore the original implementation, or use a dummy.
     IMP originalImplementation = method_getImplementation(originalMethod ?: objectMethod);
     class_replaceMethod(cls, @selector(forwardInvocation:), originalImplementation, "v@:@");
 }
