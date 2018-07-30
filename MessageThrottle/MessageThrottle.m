@@ -239,6 +239,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 @interface MTEngine ()
 
 @property (nonatomic) NSMapTable<id, NSMutableSet<NSString *> *> *targetSELs;
+@property (nonatomic) NSMutableSet<Class> *classHooked;
 
 - (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc;
 
@@ -277,6 +278,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     self = [super init];
     if (self) {
         _targetSELs = [NSMapTable weakToStrongObjectsMapTable];
+        _classHooked = [NSMutableSet set];
         pthread_mutex_init(&mutex, NULL);
         NSNotificationName name = nil;
 #if TARGET_OS_IOS || TARGET_OS_TV
@@ -413,13 +415,17 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
                     Class clsA = rule.target;
                     Class clsB = target;
                     shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]) && shouldApply;
-                    NSLog(@"Error: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", selectorName, NSStringFromClass(clsB));
+                    NSLog(@"Sorry: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", selectorName, NSStringFromClass(clsB));
                 }
             }
         }
-        // TODO: check has subclass hooked!
-//        MTDealloc *mtDealloc = objc_getAssociatedObject(rule.target, rule.selector);
-        
+        // check has subclass hooked!
+        for (Class cls in self.classHooked) {
+            if (mt_object_isClass(rule.target) && [cls isSubclassOfClass:rule.target]) {
+                shouldApply = NO;
+                NSLog(@"Sorry: %@ used to be applied, can't apply it's super class %@!", NSStringFromClass(cls), NSStringFromClass(rule.target));
+            }
+        }
         if (shouldApply) {
             [self addSelector:rule.selector onTarget:rule.target];
             mt_overrideMethod(rule.target, rule.selector, rule.aliasSelector);
@@ -751,6 +757,7 @@ static void mt_overrideMethod(id target, SEL selector, SEL aliasSelector)
             NSCAssert(addedAlias, @"Original implementation for %@ is already copied to %@ on %@", NSStringFromSelector(selector), NSStringFromSelector(aliasSelector), cls);
         }
         class_replaceMethod(cls, selector, mt_getMsgForwardIMP(statedClass, selector), typeEncoding);
+        [MTEngine.defaultEngine.classHooked addObject:cls];
     }
     
     return;
