@@ -15,7 +15,7 @@ before_deploy:
 - carthage archive $FRAMEWORK_NAME
 script:
 - xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo -configuration Release -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO
-- xctool -project MTDemo/MTDemo.xcodeproj -scheme MTDemo build test -sdk iphonesimulator GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=YES GCC_GENERATE_TEST_COVERAGE_FILES=YES
+- xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo build test -sdk iphonesimulator GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=YES GCC_GENERATE_TEST_COVERAGE_FILES=YES
 after_success:
 - bash <(curl -s https://codecov.io/bash)
 deploy:
