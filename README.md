@@ -7,6 +7,7 @@
 [![CI Status](http://img.shields.io/travis/yulingtianxia/MessageThrottle.svg?style=flat)](https://travis-ci.org/yulingtianxia/MessageThrottle)
 [![Version](https://img.shields.io/cocoapods/v/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![codecov](https://codecov.io/gh/yulingtianxia/MessageThrottle/branch/master/graph/badge.svg)](https://codecov.io/gh/yulingtianxia/MessageThrottle)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/74890ac9cb4d4be6a8478009ac1c4e52)](https://www.codacy.com/project/yulingtianxia/MessageThrottle/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=yulingtianxia/MessageThrottle&amp;utm_campaign=Badge_Grade_Dashboard)
 [![License](https://img.shields.io/cocoapods/l/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
 [![Platform](https://img.shields.io/cocoapods/p/MessageThrottle.svg?style=flat)](http://cocoapods.org/pods/MessageThrottle)
