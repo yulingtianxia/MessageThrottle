@@ -52,7 +52,6 @@
     for (MTRule *rule in rules) {
 //        rule.persistent = YES;
         NSLog(@"%@", rule);
-        NSLog(@"%p", rule.selector);
     }
     
 //    [MTEngine.defaultEngine discardRule:rule];

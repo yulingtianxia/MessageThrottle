@@ -13,8 +13,11 @@ before_script:
 before_deploy:
 - carthage build --no-skip-current
 - carthage archive $FRAMEWORK_NAME
-script: xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo -configuration
-  Release -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO
+script:
+- xcodebuild -project MTDemo/MTDemo.xcodeproj -scheme MTDemo -configuration Release -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO
+- xctool -project MTDemo/MTDemo.xcodeproj -scheme MTDemo build test -sdk iphonesimulator GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=YES GCC_GENERATE_TEST_COVERAGE_FILES=YES
+after_success:
+- bash <(curl -s https://codecov.io/bash)
 deploy:
   provider: releases
   api_key:
