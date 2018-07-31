@@ -24,7 +24,7 @@ MessageThrottle is a lightweight, simple library for controlling frequency of fo
 - [Objective-C Message Throttle and Debounce](http://yulingtianxia.com/blog/2017/11/05/Objective-C-Message-Throttle-and-Debounce/)
 - [Associated Object and Dealloc](http://yulingtianxia.com/blog/2017/12/15/Associated-Object-and-Dealloc/)
 - [MessageThrottle Performance Benchmark and Optimization](http://yulingtianxia.com/blog/2018/05/31/MessageThrottle-Performance-Benchmark-and-Optimization/)
-- [MessageThrottle Persistent Rules and Safety](http://yulingtianxia.com/blog/2018/07/31/MessageThrottle-Persistent-Rules-and-Safety/)
+- [MessageThrottle Safety](http://yulingtianxia.com/blog/2018/07/31/MessageThrottle-Safety/)
 
 ## 🌟 Features
 
@@ -81,6 +81,13 @@ You should call `discard` method When you don't need limit `foo:` method.
 ```
 
 **NOTE: `MTRule` is self-managed. If the `target` of rule is a object instance, `MTRule` will discard itself automatically when the `target` is deallocated.**
+
+Some rules may have large `durationThreshold`. You can set property `persistent` to `YES`, and save them on disk by calling `savePersistentRules` method. These persistent rules will be applied after `MTEngine` class is loaded. `savePersistentRules` will be called automatically when receive terminate notification.
+
+```
+rule.persistent = YES;
+[MTEngine.defaultEngine savePersistentRules];
+```
 
 `MTRule` represents the rule of a message throttle, which contains strategy and frequency of sending messages. 
 
