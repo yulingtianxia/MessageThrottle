@@ -35,6 +35,7 @@ MessageThrottle is a lightweight, simple library for controlling frequency of fo
 - [x] Centralized management of rules.
 - [x] Self-managed rules.
 - [x] Let method **MUST** invoke at the specified conditions.
+- [x] Persistent rules. 
 
 ## 🔮 Example
 

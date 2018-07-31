@@ -179,6 +179,14 @@
     [rule2 discard];
 }
 
+- (void)testApplySuperStubThenDiscardThenApplyStub {
+    MTRule *rule1 = [SuperStub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
+    [rule1 discard];
+    MTRule *rule2 = [Stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
+    [self.stub foo:[NSDate date]];
+    [rule2 discard];
+}
+
 - (void)testApplyMetaStubThenDiscardThenApplyMetaSuperStub {
     MTRule *rule1 = [mt_metaClass(Stub.class) mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
     [rule1 discard];
@@ -338,9 +346,9 @@
     MTRule *rule = [self.stub mt_limitSelector:@selector(bar) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
     NSCAssert((rule.durationThreshold == 0.01 && rule.mode == MTPerformModeDebounce), @"rule not correct!");
     NSObject *bar = self.stub.bar;
-    [self.stub removeObserver:self forKeyPath:@"bar"];
-    [rule discard];
 //    [self.stub removeObserver:self forKeyPath:@"bar"];
+    [rule discard];
+    [self.stub removeObserver:self forKeyPath:@"bar"];
     bar = self.stub.bar;
 }
 
