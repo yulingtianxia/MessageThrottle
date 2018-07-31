@@ -672,18 +672,6 @@ static BOOL mt_isMsgForwardIMP(IMP impl)
     ;
 }
 
-static void mt_swizzleForwardInvocation(Class cls)
-{
-    NSCParameterAssert(cls);
-    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) == (IMP)mt_forwardInvocation) {
-        return;
-    }
-    IMP originalImplementation = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
-    if (originalImplementation) {
-        class_addMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName), originalImplementation, "v@:@");
-    }
-}
-
 static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
 {
     Method originMethod = class_getInstanceMethod(cls, selector);
@@ -722,11 +710,9 @@ static BOOL mt_overrideMethod(MTRule *rule)
     }
     else if (mt_object_isClass(target)) {
         cls = target;
-        mt_swizzleForwardInvocation(cls);
     }
     else if (statedClass != baseClass) {
         cls = baseClass;
-        mt_swizzleForwardInvocation(cls);
     }
     else {
         const char *subclassName = [MTSubclassPrefix stringByAppendingString:className].UTF8String;
@@ -746,7 +732,7 @@ static BOOL mt_overrideMethod(MTRule *rule)
         cls = subclass;
     }
     
-    // check has subclass hooked!
+    // check if subclass has hooked!
     for (Class clsHooked in MTEngine.defaultEngine.classHooked) {
         if (clsHooked != cls && [clsHooked isSubclassOfClass:cls]) {
             NSLog(@"Sorry: %@ used to be applied, can't apply it's super class %@!", NSStringFromClass(cls), NSStringFromClass(cls));
@@ -756,7 +742,12 @@ static BOOL mt_overrideMethod(MTRule *rule)
     
     [rule mt_deallocObject].cls = cls;
     
-    mt_swizzleForwardInvocation(cls);
+    if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) != (IMP)mt_forwardInvocation) {
+        IMP originalImplementation = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
+        if (originalImplementation) {
+            class_addMethod(cls, NSSelectorFromString(MTForwardInvocationSelectorName), originalImplementation, "v@:@");
+        }
+    }
     
     Class superCls = class_getSuperclass(cls);
     Method targetMethod = class_getInstanceMethod(cls, selector);

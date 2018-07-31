@@ -33,6 +33,24 @@
     [super tearDown];
 }
 
+- (void)testSample {
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
+    [self.stub foo:[NSDate date]];
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeLast onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
+    [self.stub foo:[NSDate date]];
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
+    [self.stub foo:[NSDate date]];
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
+    [self.stub foo:[NSDate date]];
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
+        return YES;
+    }];
+    [self.stub foo:[NSDate date]];
+    for (MTRule *rule in self.stub.mt_allRules) {
+        [rule discard];
+    }
+}
+
 - (void)testInstancesOfSuperAndSub {
     MTRule *rule1 = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
     MTRule *rule2 = [self.sstub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
