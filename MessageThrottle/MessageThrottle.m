@@ -884,7 +884,7 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
     rule.mode = mode;
     rule.messageQueue = messageQueue;
     rule.alwaysInvokeBlock = alwaysInvokeBlock;
-    rule.persistent = (mode == MTPerformModeFirstly && durationThreshold > 5);
+    rule.persistent = (mode == MTPerformModeFirstly && durationThreshold > 5 && mt_object_isClass(self));
     if (isNewRule) {
         return [rule apply] ? rule : nil;
     }
