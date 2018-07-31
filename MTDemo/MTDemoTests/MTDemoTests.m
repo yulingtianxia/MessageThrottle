@@ -29,19 +29,46 @@
 
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
-//    [MTEngine.defaultEngine savePersistentRules];
+    [Stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01].persistent = YES;
+    [MTEngine.defaultEngine savePersistentRules];
     [super tearDown];
 }
 
-- (void)testSample {
+- (void)testSamplePerformModeFirstly {
     [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
     [self.stub foo:[NSDate date]];
+    for (MTRule *rule in self.stub.mt_allRules) {
+        [rule discard];
+    }
+}
+
+- (void)testSamplePerformModeLast {
     [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeLast onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
     [self.stub foo:[NSDate date]];
+    for (MTRule *rule in self.stub.mt_allRules) {
+        [rule discard];
+    }
+}
+
+- (void)testSamplePerformModeDebounce {
     [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
     [self.stub foo:[NSDate date]];
-    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
+    for (MTRule *rule in self.stub.mt_allRules) {
+        [rule discard];
+    }
+}
+
+- (void)testSampleDurationZero
+{
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0 usingMode:MTPerformModeDebounce onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:nil];
     [self.stub foo:[NSDate date]];
+    for (MTRule *rule in self.stub.mt_allRules) {
+        [rule discard];
+    }
+}
+
+- (void)testSampleAlwaysInvoke
+{
     [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
         return YES;
     }];
@@ -132,6 +159,14 @@
     for (MTRule *rule in mt_metaClass(Stub.class).mt_allRules) {
         NSLog(@"%@", rule.description);
     }
+    [rule1 discard];
+    [rule2 discard];
+}
+
+- (void)testSubAndSuperClass {
+    MTRule *rule1 = [Stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
+    MTRule *rule2 = [SuperStub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
+    [self.stub foo:[NSDate date]];
     [rule1 discard];
     [rule2 discard];
 }

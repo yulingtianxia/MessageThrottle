@@ -674,10 +674,10 @@ static BOOL mt_isMsgForwardIMP(IMP impl)
 
 static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
 {
-    Method originMethod = class_getInstanceMethod(cls, selector);
-    const char *originType = (char *)method_getTypeEncoding(originMethod);
     IMP msgForwardIMP = _objc_msgForward;
 #if !defined(__arm64__)
+    Method originMethod = class_getInstanceMethod(cls, selector);
+    const char *originType = (char *)method_getTypeEncoding(originMethod);
     if (originType[0] == _C_STRUCT_B) {
         //In some cases that returns struct, we should use the '_stret' API:
         //http://sealiesoftware.com/blog/archive/2008/10/30/objc_explain_objc_msgSend_stret.html
