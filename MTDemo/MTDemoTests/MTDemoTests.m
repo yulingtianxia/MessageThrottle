@@ -170,7 +170,7 @@
     [self.sstub foo:[NSDate date]];
     [Stub foo:[NSDate date]];
     [SuperStub foo:[NSDate date]];
-    
+
     for (MTRule *rule in self.stub.mt_allRules) {
         NSLog(@"%@", rule.description);
     }
@@ -304,10 +304,9 @@
     }];
 }
 
-- (void)testThreadSafety
+- (void)testThreadSafetyForApplyAndDiscard
 {
     MTRule *rule = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
-    [self.sstub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         for (int i = 0; i < 10000; i ++) {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -318,14 +317,20 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         for (int i = 0; i < 10000; i ++) {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [self.stub foo:[NSDate date]];
+                [rule discard];
             });
         }
     });
+}
+
+- (void)testThreadSafetyForPerform
+{
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
+    [self.sstub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         for (int i = 0; i < 10000; i ++) {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [rule discard];
+                [self.stub foo:[NSDate date]];
             });
         }
     });
