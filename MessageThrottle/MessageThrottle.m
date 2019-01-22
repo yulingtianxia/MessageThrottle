@@ -602,8 +602,9 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
                 invocation.selector = rule.aliasSelector;
                 [invocation invoke];
+                rule.lastTimeRequest = now;
                 dispatch_async(rule.messageQueue, ^{
-                    rule.lastTimeRequest = now;
+                    // May switch from other modes, set nil just in case.
                     rule.lastInvocation = nil;
                 });
             }
