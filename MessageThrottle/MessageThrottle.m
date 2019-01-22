@@ -351,7 +351,9 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
         NSMutableSet *selectors = [self.targetSELs objectForKey:target];
         for (NSString *selectorName in selectors) {
             MTDealloc *mtDealloc = objc_getAssociatedObject(target, NSSelectorFromString(selectorName));
-            [rules addObject:mtDealloc.rule];
+            if (mtDealloc.rule) {
+                [rules addObject:mtDealloc.rule];
+            }
         }
     }
     pthread_mutex_unlock(&mutex);
