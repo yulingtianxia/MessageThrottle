@@ -163,6 +163,27 @@
     [rule2 discard];
 }
 
+- (void)testClassThenInstance {
+    MTRule *rule2 = [Stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
+    MTRule *rule1 = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
+    [self.stub foo:[NSDate date]];
+    [self.sstub foo:[NSDate date]];
+    [Stub foo:[NSDate date]];
+    [SuperStub foo:[NSDate date]];
+    
+    for (MTRule *rule in self.stub.mt_allRules) {
+        NSLog(@"%@", rule.description);
+    }
+    for (MTRule *rule in SuperStub.mt_allRules) {
+        NSLog(@"%@", rule.description);
+    }
+    for (MTRule *rule in mt_metaClass(Stub.class).mt_allRules) {
+        NSLog(@"%@", rule.description);
+    }
+    [rule1 discard];
+    [rule2 discard];
+}
+
 - (void)testSubAndSuperClass {
     MTRule *rule1 = [Stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
     MTRule *rule2 = [SuperStub mt_limitSelector:@selector(foo:) oncePerDuration:0.01];
