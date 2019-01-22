@@ -120,7 +120,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @end
 
-@interface MTRule () <NSCoding>
+@interface MTRule () <NSSecureCoding>
 
 @property (nonatomic) NSTimeInterval lastTimeRequest;
 @property (nonatomic) NSInvocation *lastInvocation;
@@ -159,7 +159,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 - (BOOL)isPersistent
 {
     if (!mt_object_isClass(self.target)) {
-        return NO;
+        _persistent = NO;
     }
     return _persistent;
 }
@@ -195,7 +195,12 @@ static const char * mt_blockMethodSignature(id blockObj)
     return mtDealloc;
 }
 
-#pragma mark NSCoding
+#pragma mark NSSecureCoding
+
++ (BOOL)supportsSecureCoding
+{
+    return YES;
+}
 
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
@@ -217,18 +222,18 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
 {
-    id target = NSClassFromString([aDecoder decodeObjectForKey:@"target"]);
+    id target = NSClassFromString([aDecoder decodeObjectOfClass:NSString.class forKey:@"target"]);
     if (!target) {
-        target = NSClassFromString([aDecoder decodeObjectForKey:@"meta_target"]);
+        target = NSClassFromString([aDecoder decodeObjectOfClass:NSString.class forKey:@"meta_target"]);
         target = mt_metaClass(target);
     }
     if (target) {
-        SEL selector = NSSelectorFromString([aDecoder decodeObjectForKey:@"selector"]);
+        SEL selector = NSSelectorFromString([aDecoder decodeObjectOfClass:NSString.class forKey:@"selector"]);
         NSTimeInterval durationThreshold = [aDecoder decodeDoubleForKey:@"durationThreshold"];
         MTPerformMode mode = [[aDecoder decodeObjectForKey:@"mode"] unsignedIntegerValue];
         NSTimeInterval lastTimeRequest = [aDecoder decodeDoubleForKey:@"lastTimeRequest"];
         BOOL persistent = [aDecoder decodeBoolForKey:@"persistent"];
-        NSString *aliasSelector = [aDecoder decodeObjectForKey:@"aliasSelector"];
+        NSString *aliasSelector = [aDecoder decodeObjectOfClass:NSString.class forKey:@"aliasSelector"];
         
         self = [self initWithTarget:target selector:selector durationThreshold:durationThreshold];
         self.mode = mode;
@@ -270,11 +275,22 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 {
     NSArray<NSData *> *array = [NSUserDefaults.standardUserDefaults objectForKey:kMTPersistentRulesKey];
     for (NSData *data in array) {
-        @try {
-            MTRule *rule = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-            [rule apply];
-        } @catch (NSException *exception) {
-            NSLog(@"%@", exception.description);
+        if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
+            NSError *error = nil;
+            MTRule *rule = [NSKeyedUnarchiver unarchivedObjectOfClass:MTRule.class fromData:data error:&error];
+            if (error) {
+                NSLog(@"%@", error.localizedDescription);
+            }
+            else {
+                [rule apply];
+            }
+        } else {
+            @try {
+                MTRule *rule = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+                [rule apply];
+            } @catch (NSException *exception) {
+                NSLog(@"%@", exception.description);
+            }
         }
     }
 }
@@ -309,8 +325,19 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     NSMutableArray<NSData *> *array = [NSMutableArray array];
     for (MTRule *rule in self.allRules) {
         if (rule.isPersistent) {
-            NSData *data = [NSKeyedArchiver archivedDataWithRootObject:rule];
-            [array addObject:data];
+            NSData *data;
+            if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
+                NSError *error = nil;
+                data = [NSKeyedArchiver archivedDataWithRootObject:rule requiringSecureCoding:YES error:&error];
+                if (error) {
+                    NSLog(@"%@", error.localizedDescription);
+                }
+            } else {
+                data = [NSKeyedArchiver archivedDataWithRootObject:rule];
+            }
+            if (data) {
+                [array addObject:data];
+            }
         }
     }
     [NSUserDefaults.standardUserDefaults setObject:array forKey:kMTPersistentRulesKey];
@@ -414,14 +441,22 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
                 continue;
             }
             NSMutableSet *selectors = [self.targetSELs objectForKey:target];
-            for (NSString *selectorName in selectors) {
-                if (sel_isEqual(rule.selector, NSSelectorFromString(selectorName))
-                    && mt_object_isClass(rule.target)
-                    && mt_object_isClass(target)) {
+            NSString *selectorName = NSStringFromSelector(rule.selector);
+            if ([selectors containsObject:selectorName]) {
+                if (mt_object_isClass(rule.target) && mt_object_isClass(target)) {
                     Class clsA = rule.target;
                     Class clsB = target;
-                    shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]) && shouldApply;
-                    NSLog(@"Sorry: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", selectorName, NSStringFromClass(clsB));
+                    shouldApply = !([clsA isSubclassOfClass:clsB] || [clsB isSubclassOfClass:clsA]);
+                    // inheritance relationship
+                    if (!shouldApply) {
+                        NSLog(@"Sorry: %@ already apply rule in %@. A message can only have one rule per class hierarchy.", selectorName, NSStringFromClass(clsB));
+                        break;
+                    }
+                }
+                else if (mt_object_isClass(target) && target == object_getClass(rule.target)) {
+                    shouldApply = NO;
+                    NSLog(@"Sorry: %@ already apply rule in target's Class(%@).", selectorName, target);
+                    break;
                 }
             }
         }
@@ -433,8 +468,12 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     }
     else {
         shouldApply = NO;
+        NSLog(@"Sorry: invalid rule.");
     }
     [mtDealloc unlock];
+    if (!shouldApply) {
+        objc_setAssociatedObject(rule.target, rule.selector, nil, OBJC_ASSOCIATION_RETAIN);
+    }
     pthread_mutex_unlock(&mutex);
     return shouldApply;
 }
@@ -557,43 +596,52 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
     
     NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
     switch (rule.mode) {
-        case MTPerformModeFirstly:
+        case MTPerformModeFirstly: {
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
-                rule.lastTimeRequest = now;
                 invocation.selector = rule.aliasSelector;
                 [invocation invoke];
-                rule.lastInvocation = nil;
-            }
-            break;
-        case MTPerformModeLast:
-            invocation.selector = rule.aliasSelector;
-            rule.lastInvocation = invocation;
-            [rule.lastInvocation retainArguments];
-            if (now - rule.lastTimeRequest > rule.durationThreshold) {
-                rule.lastTimeRequest = now;
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
-                    if (!rule.isActive) {
-                        rule.lastInvocation.selector = rule.selector;
-                    }
-                    [rule.lastInvocation invoke];
+                dispatch_async(rule.messageQueue, ^{
+                    rule.lastTimeRequest = now;
                     rule.lastInvocation = nil;
                 });
             }
             break;
-        case MTPerformModeDebounce:
+        }
+        case MTPerformModeLast: {
             invocation.selector = rule.aliasSelector;
-            rule.lastInvocation = invocation;
-            [rule.lastInvocation retainArguments];
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
-                if (rule.lastInvocation == invocation) {
-                    if (!rule.isActive) {
-                        rule.lastInvocation.selector = rule.selector;
-                    }
-                    [rule.lastInvocation invoke];
-                    rule.lastInvocation = nil;
+            [invocation retainArguments];
+            dispatch_async(rule.messageQueue, ^{
+                rule.lastInvocation = invocation;
+                if (now - rule.lastTimeRequest > rule.durationThreshold) {
+                    rule.lastTimeRequest = now;
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
+                        if (!rule.isActive) {
+                            rule.lastInvocation.selector = rule.selector;
+                        }
+                        [rule.lastInvocation invoke];
+                        rule.lastInvocation = nil;
+                    });
                 }
             });
             break;
+        }
+        case MTPerformModeDebounce: {
+            invocation.selector = rule.aliasSelector;
+            [invocation retainArguments];
+            dispatch_async(rule.messageQueue, ^{
+                rule.lastInvocation = invocation;
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
+                    if (rule.lastInvocation == invocation) {
+                        if (!rule.isActive) {
+                            rule.lastInvocation.selector = rule.selector;
+                        }
+                        [rule.lastInvocation invoke];
+                        rule.lastInvocation = nil;
+                    }
+                });
+            });
+            break;
+        }
     }
 }
 
