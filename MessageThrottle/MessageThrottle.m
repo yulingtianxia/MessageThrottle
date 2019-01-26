@@ -438,13 +438,13 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     __block BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
-            if (target == rule.target) {
-                shouldApply = NO;
-                continue;
-            }
             NSMutableSet *selectors = [self.targetSELs objectForKey:target];
             NSString *selectorName = NSStringFromSelector(rule.selector);
             if ([selectors containsObject:selectorName]) {
+                if (target == rule.target) {
+                    shouldApply = NO;
+                    continue;
+                }
                 if (mt_object_isClass(rule.target) && mt_object_isClass(target)) {
                     Class clsA = rule.target;
                     Class clsB = target;
