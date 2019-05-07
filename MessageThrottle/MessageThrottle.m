@@ -317,7 +317,9 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 
 - (void)handleAppWillTerminateNotification:(NSNotification *)notification
 {
-    [self savePersistentRules];
+    if (@available(macOS 10.11, *)) {
+        [self savePersistentRules];
+    }
 }
 
 - (void)savePersistentRules

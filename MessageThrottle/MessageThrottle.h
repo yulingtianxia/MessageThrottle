@@ -125,7 +125,7 @@ Class mt_metaClass(Class cls);
  iOS、macOS 和 tvOS 下杀掉 App 后会自动调用。
  请在需要保存持久化规则的时候手动调用此方法。
  */
-- (void)savePersistentRules;
+- (void)savePersistentRules API_AVAILABLE(macosx(10.11));
 
 @end
 

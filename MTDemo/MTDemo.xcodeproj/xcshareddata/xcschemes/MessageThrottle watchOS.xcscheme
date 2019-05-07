@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A4E732482262175A003D7063"
-               BuildableName = "MessageThrottle_watchOS.framework"
+               BuildableName = "MessageThrottle.framework"
                BlueprintName = "MessageThrottle watchOS"
                ReferencedContainer = "container:MTDemo.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A4E732482262175A003D7063"
-            BuildableName = "MessageThrottle_watchOS.framework"
+            BuildableName = "MessageThrottle.framework"
             BlueprintName = "MessageThrottle watchOS"
             ReferencedContainer = "container:MTDemo.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A4E732482262175A003D7063"
-            BuildableName = "MessageThrottle_watchOS.framework"
+            BuildableName = "MessageThrottle.framework"
             BlueprintName = "MessageThrottle watchOS"
             ReferencedContainer = "container:MTDemo.xcodeproj">
          </BuildableReference>
