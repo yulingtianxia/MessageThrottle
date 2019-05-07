@@ -13,8 +13,8 @@ s.social_media_url = 'https://twitter.com/yulingtianxia'
 s.source       = { :git => "https://github.com/yulingtianxia/MessageThrottle.git", :tag => s.version.to_s }
 
 s.ios.deployment_target = "6.0"
-s.osx.deployment_target = "10.7"
-s.watchos.deployment_target = "1.0"
+s.osx.deployment_target = "10.8"
+s.watchos.deployment_target = "2.0"
 s.tvos.deployment_target = "9.0"
 s.requires_arc = true
 
