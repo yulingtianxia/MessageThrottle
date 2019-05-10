@@ -437,7 +437,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     pthread_mutex_lock(&mutex);
     MTDealloc *mtDealloc = [rule mt_deallocObject];
     [mtDealloc lock];
-    __block BOOL shouldApply = YES;
+    BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
         for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
             NSMutableSet *selectors = [self.targetSELs objectForKey:target];
