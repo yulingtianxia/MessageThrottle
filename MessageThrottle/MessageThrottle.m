@@ -598,7 +598,7 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
         return;
     }
     
-    NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+    NSTimeInterval now = CACurrentMediaTime();
     switch (rule.mode) {
         case MTPerformModeFirstly: {
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
