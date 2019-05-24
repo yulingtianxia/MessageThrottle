@@ -23,12 +23,13 @@
 
 static inline BOOL mt_object_isClass(id _Nullable obj)
 {
-#if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_8_0 || __TV_OS_VERSION_MIN_REQUIRED >= __TVOS_9_0 || __WATCH_OS_VERSION_MIN_REQUIRED >= __WATCHOS_2_0 || __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_10
-    return object_isClass(obj);
-#else
     if (!obj) return NO;
-    return obj == [obj class];
-#endif
+    if (@available(iOS 8.0, macOS 10.10, tvOS 9.0, watchOS 2.0, *)) {
+        return object_isClass(obj);
+    }
+    else {
+        return obj == [obj class];
+    }
 }
 
 Class mt_metaClass(Class cls)
@@ -598,7 +599,12 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
         return;
     }
     
+#if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_OSX
     NSTimeInterval now = CACurrentMediaTime();
+#else
+    NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+#endif
+    
     switch (rule.mode) {
         case MTPerformModeFirstly: {
             if (now - rule.lastTimeRequest > rule.durationThreshold) {
