@@ -599,11 +599,7 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
         return;
     }
     
-#if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_OSX
-    NSTimeInterval now = CACurrentMediaTime();
-#else
     NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
-#endif
     
     switch (rule.mode) {
         case MTPerformModeFirstly: {
