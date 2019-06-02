@@ -62,13 +62,6 @@ Stub *s = [Stub new];
 // You can also assign `Stub.class` or `mt_metaClass(Stub.class)` to `target` argument.
 MTRule *rule = [[MTRule alloc] initWithTarget:s selector:@selector(foo:) durationThreshold:0.01];
 rule.mode = MTModePerformLast; // Or `MTModePerformFirstly`, ect
-rule.messageQueue = /** a dispatch queue you want, maybe `dispatch_get_main_queue()` whatever...*/
-rule.alwaysInvokeBlock = ^(MTRule *rule, NSDate *date) {
-   if ([date isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]]) {
-       return YES;
-   }
-   return NO;
-};
 [rule apply];
 ```
 

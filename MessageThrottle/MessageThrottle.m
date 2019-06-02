@@ -127,6 +127,8 @@ static const char * mt_blockMethodSignature(id blockObj)
 @property (nonatomic) NSInvocation *lastInvocation;
 @property (nonatomic) SEL aliasSelector;
 @property (nonatomic, readwrite, getter=isActive) BOOL active;
+@property (nonatomic, readwrite) id alwaysInvokeBlock;
+@property (nonatomic, readwrite) dispatch_queue_t messageQueue;
 
 @end
 
@@ -363,7 +365,6 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     return [rules copy];
 }
 
-
 /**
  添加 target-selector 记录
 
@@ -515,7 +516,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     pthread_mutex_unlock(&mutex);
 }
 
-#pragma mark - Private Helper
+#pragma mark - Private Helper Function
 
 static BOOL mt_checkRuleValid(MTRule *rule)
 {
@@ -600,6 +601,7 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
     }
     
     NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+    now += MTEngine.defaultEngine.correctionForSystemTime;
     
     switch (rule.mode) {
         case MTPerformModeFirstly: {
@@ -937,7 +939,7 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
     }
     rule.durationThreshold = durationThreshold;
     rule.mode = mode;
-    rule.messageQueue = messageQueue;
+    rule.messageQueue = messageQueue ?: dispatch_get_main_queue();
     rule.alwaysInvokeBlock = alwaysInvokeBlock;
     rule.persistent = (mode == MTPerformModeFirstly && durationThreshold > 5 && mt_object_isClass(self));
     if (isNewRule) {

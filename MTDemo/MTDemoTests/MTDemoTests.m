@@ -289,10 +289,9 @@
 
 - (void)testPerformanceExample {
     // This is an example of a performance test case.
-    MTRule *rule = [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce];
-    rule.alwaysInvokeBlock =  ^(MTRule *rule, NSDate *date) {
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce onMessageQueue:nil alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
         return YES;
-    };
+    }];
     NSDate *date = [NSDate date];
     [self measureBlock:^{
         // Put the code you want to measure the time of here.

@@ -61,12 +61,12 @@ Class mt_metaClass(Class cls);
  block 传入的第一个参数为 `self`，其余参数列表与消息调用的参数列表相同。
  block 如果返回 YES，则消息立即执行，但不会影响当前节流模式。
  */
-@property (nonatomic) id alwaysInvokeBlock;
+@property (nonatomic, readonly) id alwaysInvokeBlock;
 
 /**
  MTModePerformLastly 和 MTModePerformDebounce 模式下消息发送的队列，默认在主队列
  */
-@property (nonatomic) dispatch_queue_t messageQueue;
+@property (nonatomic, readonly) dispatch_queue_t messageQueue;
 
 /**
  是否持久化规则。如果选择持久化，下次启动 App 将会自动应用规则；默认为 NO，规则只在内存中生效。
@@ -102,7 +102,17 @@ Class mt_metaClass(Class cls);
 @interface MTEngine : NSObject
 
 @property (nonatomic, class, readonly) MTEngine *defaultEngine;
+
+/**
+ 获取所有规则
+ */
 @property (nonatomic, readonly) NSArray<MTRule *> *allRules;
+
+/**
+ 校正系统时间所需的差值。用户可能手动修改系统时间，此时可以计算服务器时间与系统时间的差值进行修正。
+ 单位：秒
+ */
+@property (nonatomic) NSTimeInterval correctionForSystemTime;
 
 /**
  应用规则，会覆盖已有的规则
@@ -166,7 +176,7 @@ Class mt_metaClass(Class cls);
  @param messageQueue 延时执行方法的队列
  @return 如果限频成功则返回规则对象，否则返回 nil
  */
-- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue;
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(nullable dispatch_queue_t)messageQueue;
 
 /**
  对方法调用限频，可以指定方法某种情况下一定会调用。
@@ -179,7 +189,7 @@ Class mt_metaClass(Class cls);
  @param alwaysInvokeBlock 是否必须执行消息。block 的参数列表可选，返回值为 BOOL 类型。参考 `MTRule`。
  @return 如果限频成功则返回规则对象，否则返回 nil
  */
-- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue alwaysInvokeBlock:(nullable id)alwaysInvokeBlock;
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(nullable dispatch_queue_t)messageQueue alwaysInvokeBlock:(nullable id)alwaysInvokeBlock;
 
 @end
 
