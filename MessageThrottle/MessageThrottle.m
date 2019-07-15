@@ -250,6 +250,17 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @end
 
+@interface MTInvocation ()
+
+@property (nonatomic, weak, readwrite) NSInvocation *invocation;
+@property (nonatomic, weak, readwrite) MTRule *rule;
+
+@end
+
+@implementation MTInvocation
+
+@end
+
 @interface MTEngine ()
 
 @property (nonatomic) NSMapTable<id, NSMutableSet<NSString *> *> *targetSELs;
@@ -549,8 +560,13 @@ static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
         return NO;
     }
     
+    MTInvocation *invocation = nil;
+    
     if (numberOfArguments > 1) {
-        [blockInvocation setArgument:&rule atIndex:1];
+        invocation = [MTInvocation new];
+        invocation.invocation = originalInvocation;
+        invocation.rule = rule;
+        [blockInvocation setArgument:&invocation atIndex:1];
     }
     
     void *argBuf = NULL;

@@ -69,7 +69,7 @@
 
 - (void)testSampleAlwaysInvoke
 {
-    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeFirstly onMessageQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) alwaysInvokeBlock:^(MTInvocation *invocation, NSDate *date) {
         return YES;
     }];
     [self.stub foo:[NSDate date]];
@@ -289,7 +289,7 @@
 
 - (void)testPerformanceExample {
     // This is an example of a performance test case.
-    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce onMessageQueue:nil alwaysInvokeBlock:^(MTRule *rule, NSDate *date) {
+    [self.stub mt_limitSelector:@selector(foo:) oncePerDuration:0.01 usingMode:MTPerformModeDebounce onMessageQueue:nil alwaysInvokeBlock:^(MTInvocation *invocation, NSDate *date) {
         return YES;
     }];
     NSDate *date = [NSDate date];

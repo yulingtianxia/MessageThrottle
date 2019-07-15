@@ -58,7 +58,7 @@ Class mt_metaClass(Class cls);
 
 /**
  是否必须执行消息。block 的参数列表可选，返回值为 BOOL 类型。
- block 传入的第一个参数为 `self`，其余参数列表与消息调用的参数列表相同。
+ block 传入的第一个参数为 `MTInvocation`，其余参数列表与消息调用的参数列表相同。
  block 如果返回 YES，则消息立即执行，但不会影响当前节流模式。
  */
 @property (nonatomic, readonly) id alwaysInvokeBlock;
@@ -190,6 +190,13 @@ Class mt_metaClass(Class cls);
  @return 如果限频成功则返回规则对象，否则返回 nil
  */
 - (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(nullable dispatch_queue_t)messageQueue alwaysInvokeBlock:(nullable id)alwaysInvokeBlock;
+
+@end
+
+@interface MTInvocation : NSObject
+
+@property (nonatomic, weak, readonly) NSInvocation *invocation;
+@property (nonatomic, weak, readonly) MTRule *rule;
 
 @end
 
