@@ -751,7 +751,7 @@ static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
 #if !defined(__arm64__)
     Method originMethod = class_getInstanceMethod(cls, selector);
     const char *originType = (char *)method_getTypeEncoding(originMethod);
-    if (originType[0] == _C_STRUCT_B) {
+    if (originType != NULL && originType[0] == _C_STRUCT_B) {
         //In some cases that returns struct, we should use the '_stret' API:
         //http://sealiesoftware.com/blog/archive/2008/10/30/objc_explain_objc_msgSend_stret.html
         // As an ugly internal runtime implementation detail in the 32bit runtime, we need to determine of the method we hook returns a struct or anything larger than id.
