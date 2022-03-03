@@ -21,19 +21,16 @@
 #error
 #endif
 
-static inline BOOL mt_object_isClass(id _Nullable obj)
-{
+static inline BOOL mt_object_isClass(id _Nullable obj) {
     if (!obj) return NO;
     if (@available(iOS 8.0, macOS 10.10, tvOS 9.0, watchOS 2.0, *)) {
         return object_isClass(obj);
-    }
-    else {
+    } else {
         return obj == [obj class];
     }
 }
 
-Class mt_metaClass(Class cls)
-{
+Class mt_metaClass(Class cls) {
     if (class_isMetaClass(cls)) {
         return cls;
     }
@@ -48,15 +45,13 @@ enum {
     BLOCK_HAS_SIGNATURE =     (1 << 30),
 };
 
-struct _MTBlockDescriptor
-{
+struct _MTBlockDescriptor {
     unsigned long reserved;
     unsigned long size;
     void *rest[1];
 };
 
-struct _MTBlock
-{
+struct _MTBlock {
     void *isa;
     int flags;
     int reserved;
@@ -64,8 +59,7 @@ struct _MTBlock
     struct _MTBlockDescriptor *descriptor;
 };
 
-static const char * mt_blockMethodSignature(id blockObj)
-{
+static const char * mt_blockMethodSignature(id blockObj) {
     struct _MTBlock *block = (__bridge void *)blockObj;
     struct _MTBlockDescriptor *descriptor = block->descriptor;
     
@@ -91,8 +85,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @implementation MTDealloc
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         pthread_mutexattr_t attr;
@@ -103,19 +96,16 @@ static const char * mt_blockMethodSignature(id blockObj)
     return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     SEL selector = NSSelectorFromString(@"discardRule:whenTargetDealloc:");
     ((void (*)(id, SEL, MTRule *, MTDealloc *))[MTEngine.defaultEngine methodForSelector:selector])(MTEngine.defaultEngine, selector, self.rule, self);
 }
 
-- (void)lock
-{
+- (void)lock {
     pthread_mutex_lock(&_invokeLock);
 }
 
-- (void)unlock
-{
+- (void)unlock {
     pthread_mutex_unlock(&_invokeLock);
 }
 
@@ -134,8 +124,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 @implementation MTRule
 
-- (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold
-{
+- (instancetype)initWithTarget:(id)target selector:(SEL)selector durationThreshold:(NSTimeInterval)durationThreshold {
     self = [super init];
     if (self) {
         _target = target;
@@ -150,8 +139,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 #pragma mark Getter & Setter
 
-- (SEL)aliasSelector
-{
+- (SEL)aliasSelector {
     if (!_aliasSelector) {
         NSString *selectorName = NSStringFromSelector(self.selector);
         _aliasSelector = NSSelectorFromString([NSString stringWithFormat:@"__mt_%@", selectorName]);
@@ -159,8 +147,7 @@ static const char * mt_blockMethodSignature(id blockObj)
     return _aliasSelector;
 }
 
-- (BOOL)isPersistent
-{
+- (BOOL)isPersistent {
     if (!mt_object_isClass(self.target)) {
         _persistent = NO;
     }
@@ -169,25 +156,21 @@ static const char * mt_blockMethodSignature(id blockObj)
 
 #pragma mark Public Method
 
-- (BOOL)apply
-{
+- (BOOL)apply {
     return [MTEngine.defaultEngine applyRule:self];
 }
 
-- (BOOL)discard
-{
+- (BOOL)discard {
     return [MTEngine.defaultEngine discardRule:self];
 }
 
-- (NSString *)description
-{
+- (NSString *)description {
     return [NSString stringWithFormat:@"target:%@, selector:%@, durationThreshold:%f, mode:%lu", [self.target description], NSStringFromSelector(self.selector), self.durationThreshold, (unsigned long)self.mode];
 }
 
 #pragma mark Private Method
 
-- (MTDealloc *)mt_deallocObject
-{
+- (MTDealloc *)deallocObject {
     MTDealloc *mtDealloc = objc_getAssociatedObject(self.target, self.selector);
     if (!mtDealloc) {
         mtDealloc = [MTDealloc new];
@@ -198,15 +181,30 @@ static const char * mt_blockMethodSignature(id blockObj)
     return mtDealloc;
 }
 
+- (void)invokingLastInvocation {
+    if (!self.isActive) {
+        self.lastInvocation.selector = self.selector;
+    }
+    // 判断 target 现在的类型和之前 hook 时的类型的子类（或相同）
+    // 如果判断成立，则可以正常 invoke；否则说明 isa 指针被其他程序修改过了，需要重新 apply rule，修正 isa。
+    MTDealloc *mtDealloc = [self deallocObject];
+    Class originalClass = object_getClass(self.target);
+    BOOL valid = [originalClass isSubclassOfClass:mtDealloc.cls];
+    if (!valid) {
+        [self discard];
+        [self apply];
+    }
+    [self.lastInvocation invoke];
+    self.lastInvocation = nil;
+}
+
 #pragma mark NSSecureCoding
 
-+ (BOOL)supportsSecureCoding
-{
++ (BOOL)supportsSecureCoding {
     return YES;
 }
 
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
+- (void)encodeWithCoder:(NSCoder *)aCoder {
     if (mt_object_isClass(self.target)) {
         Class cls = self.target;
         NSString *classKey = @"target";
@@ -223,8 +221,7 @@ static const char * mt_blockMethodSignature(id blockObj)
     }
 }
 
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
-{
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
     id target = NSClassFromString([aDecoder decodeObjectOfClass:NSString.class forKey:@"target"]);
     if (!target) {
         target = NSClassFromString([aDecoder decodeObjectOfClass:NSString.class forKey:@"meta_target"]);
@@ -275,8 +272,7 @@ static const char * mt_blockMethodSignature(id blockObj)
 static pthread_mutex_t mutex;
 NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 
-+ (instancetype)defaultEngine
-{
++ (instancetype)defaultEngine {
     static dispatch_once_t onceToken;
     static MTEngine *instance;
     dispatch_once(&onceToken, ^{
@@ -285,8 +281,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     return instance;
 }
 
-+ (void)load
-{
++ (void)load {
     NSArray<NSData *> *array = [NSUserDefaults.standardUserDefaults objectForKey:kMTPersistentRulesKey];
     for (NSData *data in array) {
         if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
@@ -309,8 +304,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     }
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         _targetSELs = [NSMapTable weakToStrongObjectsMapTable];
@@ -329,15 +323,13 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     return self;
 }
 
-- (void)handleAppWillTerminateNotification:(NSNotification *)notification
-{
+- (void)handleAppWillTerminateNotification:(NSNotification *)notification {
     if (@available(macOS 10.11, *)) {
         [self savePersistentRules];
     }
 }
 
-- (void)savePersistentRules
-{
+- (void)savePersistentRules {
     NSMutableArray<NSData *> *array = [NSMutableArray array];
     for (MTRule *rule in self.allRules) {
         if (rule.isPersistent) {
@@ -359,8 +351,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     [NSUserDefaults.standardUserDefaults setObject:array forKey:kMTPersistentRulesKey];
 }
 
-- (NSArray<MTRule *> *)allRules
-{
+- (NSArray<MTRule *> *)allRules {
     pthread_mutex_lock(&mutex);
     NSMutableArray *rules = [NSMutableArray array];
     for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
@@ -382,8 +373,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
  @param selector 方法名
  @param target 对象，类，元类
  */
-- (void)addSelector:(SEL)selector onTarget:(id)target
-{
+- (void)addSelector:(SEL)selector onTarget:(id)target {
     if (!target) {
         return;
     }
@@ -401,8 +391,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
  @param selector 方法名
  @param target 对象，类，元类
  */
-- (void)removeSelector:(SEL)selector onTarget:(id)target
-{
+- (void)removeSelector:(SEL)selector onTarget:(id)target {
     if (!target) {
         return;
     }
@@ -421,8 +410,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
  @param target 对象，类，元类
  @return 是否存在记录
  */
-- (BOOL)containsSelector:(SEL)selector onTarget:(id)target
-{
+- (BOOL)containsSelector:(SEL)selector onTarget:(id)target {
     return [[self.targetSELs objectForKey:target] containsObject:NSStringFromSelector(selector)];
 }
 
@@ -433,8 +421,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
  @param cls 类
  @return 是否存在记录
  */
-- (BOOL)containsSelector:(SEL)selector onTargetsOfClass:(Class)cls
-{
+- (BOOL)containsSelector:(SEL)selector onTargetsOfClass:(Class)cls {
     for (id target in [[self.targetSELs keyEnumerator] allObjects]) {
         if (!mt_object_isClass(target) &&
             object_getClass(target) == cls &&
@@ -445,10 +432,10 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     return NO;
 }
 
-- (BOOL)applyRule:(MTRule *)rule
-{
+- (BOOL)applyRule:(MTRule *)rule {
     pthread_mutex_lock(&mutex);
-    MTDealloc *mtDealloc = [rule mt_deallocObject];
+    BOOL hasApplied = objc_getAssociatedObject(rule.target, rule.selector) != nil;
+    MTDealloc *mtDealloc = [rule deallocObject];
     [mtDealloc lock];
     BOOL shouldApply = YES;
     if (mt_checkRuleValid(rule)) {
@@ -482,23 +469,21 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
             [self addSelector:rule.selector onTarget:rule.target];
             rule.active = YES;
         }
-    }
-    else {
+    } else {
         shouldApply = NO;
         NSLog(@"Sorry: invalid rule.");
     }
     [mtDealloc unlock];
-    if (!shouldApply) {
+    if (!shouldApply && !hasApplied) {
         objc_setAssociatedObject(rule.target, rule.selector, nil, OBJC_ASSOCIATION_RETAIN);
     }
     pthread_mutex_unlock(&mutex);
     return shouldApply;
 }
 
-- (BOOL)discardRule:(MTRule *)rule
-{
+- (BOOL)discardRule:(MTRule *)rule {
     pthread_mutex_lock(&mutex);
-    MTDealloc *mtDealloc = [rule mt_deallocObject];
+    MTDealloc *mtDealloc = [rule deallocObject];
     [mtDealloc lock];
     BOOL shouldDiscard = NO;
     if (mt_checkRuleValid(rule)) {
@@ -511,8 +496,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     return shouldDiscard;
 }
 
-- (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc
-{
+- (void)discardRule:(MTRule *)rule whenTargetDealloc:(MTDealloc *)mtDealloc {
     if (mt_object_isClass(rule.target)) {
         return;
     }
@@ -529,8 +513,7 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 
 #pragma mark - Private Helper Function
 
-static BOOL mt_checkRuleValid(MTRule *rule)
-{
+static BOOL mt_checkRuleValid(MTRule *rule) {
     if (rule.target && rule.selector && rule.durationThreshold > 0) {
         NSString *selectorName = NSStringFromSelector(rule.selector);
         if ([selectorName isEqualToString:@"forwardInvocation:"]) {
@@ -546,8 +529,7 @@ static BOOL mt_checkRuleValid(MTRule *rule)
     return NO;
 }
 
-static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
-{
+static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation) {
     if (!rule.alwaysInvokeBlock || ![rule.alwaysInvokeBlock isKindOfClass:NSClassFromString(@"NSBlock")]) {
         return NO;
     }
@@ -600,8 +582,7 @@ static BOOL mt_invokeFilterBlock(MTRule *rule, NSInvocation *originalInvocation)
  @param invocation NSInvocation 对象
  @param rule MTRule 对象
  */
-static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
-{
+static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule) {
     NSCParameterAssert(invocation);
     NSCParameterAssert(rule);
     
@@ -640,11 +621,7 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
                 if (now - rule.lastTimeRequest > rule.durationThreshold) {
                     rule.lastTimeRequest = now;
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
-                        if (!rule.isActive) {
-                            rule.lastInvocation.selector = rule.selector;
-                        }
-                        [rule.lastInvocation invoke];
-                        rule.lastInvocation = nil;
+                        [rule invokingLastInvocation];
                     });
                 }
             });
@@ -657,11 +634,7 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
                 rule.lastInvocation = invocation;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(rule.durationThreshold * NSEC_PER_SEC)), rule.messageQueue, ^{
                     if (rule.lastInvocation == invocation) {
-                        if (!rule.isActive) {
-                            rule.lastInvocation.selector = rule.selector;
-                        }
-                        [rule.lastInvocation invoke];
-                        rule.lastInvocation = nil;
+                        [rule invokingLastInvocation];
                     }
                 });
             });
@@ -670,13 +643,11 @@ static void mt_handleInvocation(NSInvocation *invocation, MTRule *rule)
     }
 }
 
-static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector, NSInvocation *invocation)
-{
+static void mt_forwardInvocation(__unsafe_unretained id assignSelf, SEL selector, NSInvocation *invocation) {
     MTDealloc *mtDealloc = nil;
     if (!mt_object_isClass(invocation.target)) {
         mtDealloc = objc_getAssociatedObject(invocation.target, invocation.selector);
-    }
-    else {
+    } else {
         mtDealloc = objc_getAssociatedObject(object_getClass(invocation.target), invocation.selector);
     }
     
@@ -691,15 +662,13 @@ static void mt_forwardInvocation(__unsafe_unretained id assignSlf, SEL selector,
             break;
         }
         mtDealloc = nil;
-    }
-    while (!respondsToAlias && (cls = class_getSuperclass(cls)));
+    } while (!respondsToAlias && (cls = class_getSuperclass(cls)));
     
     [mtDealloc lock];
     
     if (!respondsToAlias) {
-        mt_executeOrigForwardInvocation(assignSlf, selector, invocation);
-    }
-    else {
+        mt_executeOrigForwardInvocation(assignSelf, selector, invocation);
+    } else {
         mt_handleInvocation(invocation, mtDealloc.rule);
     }
     
@@ -713,20 +682,17 @@ static NSString *const MTSubclassPrefix = @"_MessageThrottle_";
  获取实例对象的类。如果 instance 是类对象，则返回元类。
  兼容 KVO 用子类替换 isa 并覆写 class 方法的场景。
  */
-static Class mt_classOfTarget(id target)
-{
+static Class mt_classOfTarget(id target) {
     Class cls;
     if (mt_object_isClass(target)) {
         cls = object_getClass(target);
-    }
-    else {
+    } else {
         cls = [target class];
     }
     return cls;
 }
 
-static void mt_hookedGetClass(Class class, Class statedClass)
-{
+static void mt_hookedGetClass(Class class, Class statedClass) {
     NSCParameterAssert(class);
     NSCParameterAssert(statedClass);
     Method method = class_getInstanceMethod(class, @selector(class));
@@ -736,8 +702,7 @@ static void mt_hookedGetClass(Class class, Class statedClass)
     class_replaceMethod(class, @selector(class), newIMP, method_getTypeEncoding(method));
 }
 
-static BOOL mt_isMsgForwardIMP(IMP impl)
-{
+static BOOL mt_isMsgForwardIMP(IMP impl) {
     return impl == _objc_msgForward
 #if !defined(__arm64__)
     || impl == (IMP)_objc_msgForward_stret
@@ -745,8 +710,7 @@ static BOOL mt_isMsgForwardIMP(IMP impl)
     ;
 }
 
-static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
-{
+static IMP mt_getMsgForwardIMP(Class cls, SEL selector) {
     IMP msgForwardIMP = _objc_msgForward;
 #if !defined(__arm64__)
     Method originMethod = class_getInstanceMethod(cls, selector);
@@ -768,8 +732,7 @@ static IMP mt_getMsgForwardIMP(Class cls, SEL selector)
     return msgForwardIMP;
 }
 
-static BOOL mt_overrideMethod(MTRule *rule)
-{
+static BOOL mt_overrideMethod(MTRule *rule) {
     id target = rule.target;
     SEL selector = rule.selector;
     SEL aliasSelector = rule.aliasSelector;
@@ -780,14 +743,11 @@ static BOOL mt_overrideMethod(MTRule *rule)
     
     if ([className hasPrefix:MTSubclassPrefix]) {
         cls = baseClass;
-    }
-    else if (mt_object_isClass(target)) {
+    } else if (mt_object_isClass(target)) {
         cls = target;
-    }
-    else if (statedClass != baseClass) {
+    } else if (statedClass != baseClass) {
         cls = baseClass;
-    }
-    else {
+    } else {
         const char *subclassName = [MTSubclassPrefix stringByAppendingString:className].UTF8String;
         Class subclass = objc_getClass(subclassName);
         
@@ -813,7 +773,7 @@ static BOOL mt_overrideMethod(MTRule *rule)
         }
     }
     
-    [rule mt_deallocObject].cls = cls;
+    [rule deallocObject].cls = cls;
     
     if (class_getMethodImplementation(cls, @selector(forwardInvocation:)) != (IMP)mt_forwardInvocation) {
         IMP originalImplementation = class_replaceMethod(cls, @selector(forwardInvocation:), (IMP)mt_forwardInvocation, "v@:@");
@@ -836,12 +796,10 @@ static BOOL mt_overrideMethod(MTRule *rule)
         class_replaceMethod(cls, selector, mt_getMsgForwardIMP(statedClass, selector), typeEncoding);
         [MTEngine.defaultEngine.classHooked addObject:cls];
     }
-    
     return YES;
 }
 
-static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
-{
+static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector) {
     Method targetMethod = class_getInstanceMethod(cls, selector);
     IMP targetMethodIMP = method_getImplementation(targetMethod);
     if (mt_isMsgForwardIMP(targetMethodIMP)) {
@@ -860,16 +818,14 @@ static void mt_revertHook(Class cls, SEL selector, SEL aliasSelector)
     }
 }
 
-static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector)
-{
+static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector) {
     Class cls;
     if (mt_object_isClass(target)) {
         cls = target;
         if ([MTEngine.defaultEngine containsSelector:selector onTargetsOfClass:cls]) {
             return NO;
         }
-    }
-    else {
+    } else {
         MTDealloc *mtDealloc = objc_getAssociatedObject(target, selector);
         // get class when apply rule on target.
         cls = mtDealloc.cls;
@@ -891,8 +847,7 @@ static BOOL mt_recoverMethod(id target, SEL selector, SEL aliasSelector)
     return YES;
 }
 
-static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *invocation)
-{
+static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *invocation) {
     SEL origForwardSelector = NSSelectorFromString(MTForwardInvocationSelectorName);
     if ([object_getClass(slf) instancesRespondToSelector:origForwardSelector]) {
         NSMethodSignature *methodSignature = [slf methodSignatureForSelector:origForwardSelector];
@@ -918,8 +873,7 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
 
 @implementation NSObject (MessageThrottle)
 
-- (NSArray<MTRule *> *)mt_allRules
-{
+- (NSArray<MTRule *> *)mt_allRules {
     NSMutableArray<MTRule *> *result = [NSMutableArray array];
     for (MTRule *rule in MTEngine.defaultEngine.allRules) {
         if (rule.target == self || rule.target == mt_classOfTarget(self)) {
@@ -929,23 +883,28 @@ static void mt_executeOrigForwardInvocation(id slf, SEL selector, NSInvocation *
     return [result copy];
 }
 
-- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold
-{
+- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold {
     return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:MTPerformModeDebounce];
 }
 
-- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode
-{
+- (nullable MTRule *)mt_limitSelector:(SEL)selector
+                      oncePerDuration:(NSTimeInterval)durationThreshold
+                            usingMode:(MTPerformMode)mode {
     return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:dispatch_get_main_queue()];
 }
 
-- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue
-{
+- (nullable MTRule *)mt_limitSelector:(SEL)selector
+                      oncePerDuration:(NSTimeInterval)durationThreshold
+                            usingMode:(MTPerformMode)mode
+                       onMessageQueue:(dispatch_queue_t)messageQueue {
     return [self mt_limitSelector:selector oncePerDuration:durationThreshold usingMode:mode onMessageQueue:messageQueue alwaysInvokeBlock:nil];
 }
 
-- (nullable MTRule *)mt_limitSelector:(SEL)selector oncePerDuration:(NSTimeInterval)durationThreshold usingMode:(MTPerformMode)mode onMessageQueue:(dispatch_queue_t)messageQueue alwaysInvokeBlock:(id)alwaysInvokeBlock
-{
+- (nullable MTRule *)mt_limitSelector:(SEL)selector
+                      oncePerDuration:(NSTimeInterval)durationThreshold
+                            usingMode:(MTPerformMode)mode
+                       onMessageQueue:(dispatch_queue_t)messageQueue
+                    alwaysInvokeBlock:(id)alwaysInvokeBlock {
     MTDealloc *mtDealloc = objc_getAssociatedObject(self, selector);
     MTRule *rule = mtDealloc.rule;
     BOOL isNewRule = NO;
