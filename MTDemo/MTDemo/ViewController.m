@@ -70,8 +70,7 @@
     // Dispose of any resources that can be recreated.
 }
 
-- (void)handleFooNotification:(NSNotification *)notification
-{
+- (void)handleFooNotification:(NSNotification *)notification {
     NSDate *date = notification.userInfo[@"arg"];
     NSDateFormatter *df = [NSDateFormatter new];
     [df setDateFormat:@"dd/MM/yyyy\nHH:mm:ss"];

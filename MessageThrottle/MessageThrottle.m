@@ -170,13 +170,17 @@ static const char * mt_blockMethodSignature(id blockObj) {
 
 #pragma mark Private Method
 
-- (MTDealloc *)deallocObject {
-    MTDealloc *mtDealloc = objc_getAssociatedObject(self.target, self.selector);
+- (nullable MTDealloc *)deallocObject {
+    id target = self.target;
+    if (!target) {
+        return nil;
+    }
+    MTDealloc *mtDealloc = objc_getAssociatedObject(target, self.selector);
     if (!mtDealloc) {
         mtDealloc = [MTDealloc new];
         mtDealloc.rule = self;
-        mtDealloc.cls = object_getClass(self.target);
-        objc_setAssociatedObject(self.target, self.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
+        mtDealloc.cls = object_getClass(target);
+        objc_setAssociatedObject(target, self.selector, mtDealloc, OBJC_ASSOCIATION_RETAIN);
     }
     return mtDealloc;
 }
@@ -188,6 +192,10 @@ static const char * mt_blockMethodSignature(id blockObj) {
     // 判断 target 现在的类型和之前 hook 时的类型的子类（或相同）
     // 如果判断成立，则可以正常 invoke；否则说明 isa 指针被其他程序修改过了，需要重新 apply rule，修正 isa。
     MTDealloc *mtDealloc = [self deallocObject];
+    // 如果获取不到 mtDealloc，是因为 self.target 已经析构了，所以也没必要再执行方法了
+    if (!mtDealloc) {
+        return;
+    }
     Class originalClass = object_getClass(self.target);
     BOOL valid = [originalClass isSubclassOfClass:mtDealloc.cls];
     if (!valid) {
