@@ -290,26 +290,28 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 }
 
 + (void)load {
-    NSArray<NSData *> *array = [NSUserDefaults.standardUserDefaults objectForKey:kMTPersistentRulesKey];
-    for (NSData *data in array) {
-        if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
-            NSError *error = nil;
-            MTRule *rule = [NSKeyedUnarchiver unarchivedObjectOfClass:MTRule.class fromData:data error:&error];
-            if (error) {
-                NSLog(@"%@", error.localizedDescription);
-            }
-            else {
-                [rule apply];
-            }
-        } else {
-            @try {
-                MTRule *rule = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-                [rule apply];
-            } @catch (NSException *exception) {
-                NSLog(@"%@", exception.description);
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+        NSArray<NSData *> *array = [NSUserDefaults.standardUserDefaults objectForKey:kMTPersistentRulesKey];
+        for (NSData *data in array) {
+            if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
+                NSError *error = nil;
+                MTRule *rule = [NSKeyedUnarchiver unarchivedObjectOfClass:MTRule.class fromData:data error:&error];
+                if (error) {
+                    NSLog(@"%@", error.localizedDescription);
+                }
+                else {
+                    [rule apply];
+                }
+            } else {
+                @try {
+                    MTRule *rule = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+                    [rule apply];
+                } @catch (NSException *exception) {
+                    NSLog(@"%@", exception.description);
+                }
             }
         }
-    }
+    });
 }
 
 - (instancetype)init {
