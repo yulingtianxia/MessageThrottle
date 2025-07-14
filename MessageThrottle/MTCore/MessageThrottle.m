@@ -289,31 +289,6 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     return instance;
 }
 
-+ (void)load {
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
-        NSArray<NSData *> *array = [NSUserDefaults.standardUserDefaults objectForKey:kMTPersistentRulesKey];
-        for (NSData *data in array) {
-            if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
-                NSError *error = nil;
-                MTRule *rule = [NSKeyedUnarchiver unarchivedObjectOfClass:MTRule.class fromData:data error:&error];
-                if (error) {
-                    NSLog(@"%@", error.localizedDescription);
-                }
-                else {
-                    [rule apply];
-                }
-            } else {
-                @try {
-                    MTRule *rule = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-                    [rule apply];
-                } @catch (NSException *exception) {
-                    NSLog(@"%@", exception.description);
-                }
-            }
-        }
-    });
-}
-
 - (instancetype)init {
     self = [super init];
     if (self) {
@@ -335,30 +310,20 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 
 - (void)handleAppWillTerminateNotification:(NSNotification *)notification {
     if (@available(macOS 10.11, *)) {
-        [self savePersistentRules];
+        [self savePersistentRulesIfNeeded];
     }
 }
 
-- (void)savePersistentRules {
-    NSMutableArray<NSData *> *array = [NSMutableArray array];
-    for (MTRule *rule in self.allRules) {
-        if (rule.isPersistent) {
-            NSData *data;
-            if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
-                NSError *error = nil;
-                data = [NSKeyedArchiver archivedDataWithRootObject:rule requiringSecureCoding:YES error:&error];
-                if (error) {
-                    NSLog(@"%@", error.localizedDescription);
-                }
-            } else {
-                data = [NSKeyedArchiver archivedDataWithRootObject:rule];
-            }
-            if (data) {
-                [array addObject:data];
-            }
-        }
+- (void)savePersistentRulesIfNeeded
+{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
+    
+    if ([self respondsToSelector:@selector(savePersistentRules)])
+    {
+        [self performSelector:@selector(savePersistentRules)];
     }
-    [NSUserDefaults.standardUserDefaults setObject:array forKey:kMTPersistentRulesKey];
+#pragma clang diagnostic pop
 }
 
 - (NSArray<MTRule *> *)allRules {

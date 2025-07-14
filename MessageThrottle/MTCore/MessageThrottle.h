@@ -21,6 +21,8 @@ typedef NS_ENUM(NSUInteger, MTPerformMode) {
     MTPerformModeDebounce,
 };
 
+extern NSString *const kMTPersistentRulesKey;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -129,13 +131,6 @@ Class mt_metaClass(Class cls);
  @return 废除成功返回 YES；如果规则早已被废除过、不合法，或者废除后依然需要保留 hook，则返回 NO
  */
 - (BOOL)discardRule:(MTRule *)rule;
-
-/**
- 保存持久化规则
- iOS、macOS 和 tvOS 下杀掉 App 后会自动调用。
- 请在需要保存持久化规则的时候手动调用此方法。
- */
-- (void)savePersistentRules API_AVAILABLE(macosx(10.11));
 
 @end
 

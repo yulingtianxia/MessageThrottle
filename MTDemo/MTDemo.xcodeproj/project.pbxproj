@@ -11,8 +11,6 @@
 		A4092CE21FAAFB2F00F6935B /* SuperStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CE11FAAFB2F00F6935B /* SuperStub.m */; };
 		A4371D79210F2A9E00153E3C /* SuperStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CE11FAAFB2F00F6935B /* SuperStub.m */; };
 		A4371D7A210F2AAD00153E3C /* Stub.m in Sources */ = {isa = PBXBuildFile; fileRef = A4092CDE1FAAFB1B00F6935B /* Stub.m */; };
-		A489953C1FAE2F8400A7A58A /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
-		A489953D1FAE3EC600A7A58A /* MessageThrottle.h in Headers */ = {isa = PBXBuildFile; fileRef = A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A4DB9ED91FA709A400826A8F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9ED81FA709A400826A8F /* AppDelegate.m */; };
 		A4DB9EDC1FA709A400826A8F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9EDB1FA709A400826A8F /* ViewController.m */; };
 		A4DB9EDF1FA709A400826A8F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A4DB9EDD1FA709A400826A8F /* Main.storyboard */; };
@@ -21,14 +19,9 @@
 		A4DB9EE71FA709A400826A8F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9EE61FA709A400826A8F /* main.m */; };
 		A4DB9EF11FA709A400826A8F /* MTDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9EF01FA709A400826A8F /* MTDemoTests.m */; };
 		A4DB9EFC1FA709A400826A8F /* MTDemoUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9EFB1FA709A400826A8F /* MTDemoUITests.m */; };
-		A4DB9F0C1FA70A0700826A8F /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
-		A4DB9F0D1FA70A0700826A8F /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
-		A4E7325122621801003D7063 /* MessageThrottle.h in Headers */ = {isa = PBXBuildFile; fileRef = A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A4E7325222621801003D7063 /* MessageThrottle.h in Headers */ = {isa = PBXBuildFile; fileRef = A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A4E7325322621803003D7063 /* MessageThrottle.h in Headers */ = {isa = PBXBuildFile; fileRef = A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A4E732542262188D003D7063 /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
-		A4E732552262188E003D7063 /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
-		A4E732562262188F003D7063 /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */; };
+		C07087B82E24FF4B000CC96A /* MessageThrottle.m in Sources */ = {isa = PBXBuildFile; fileRef = C07087B42E24FF4B000CC96A /* MessageThrottle.m */; };
+		C07087B92E24FF4B000CC96A /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C07087B62E24FF4B000CC96A /* Info.plist */; };
+		C07087BF2E250035000CC96A /* MTEngine+MTArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = C07087BE2E250035000CC96A /* MTEngine+MTArchive.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,7 +47,6 @@
 		A4092CE01FAAFB2F00F6935B /* SuperStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SuperStub.h; sourceTree = "<group>"; };
 		A4092CE11FAAFB2F00F6935B /* SuperStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SuperStub.m; sourceTree = "<group>"; };
 		A489952F1FAE2F6200A7A58A /* MessageThrottle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MessageThrottle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A48995321FAE2F6200A7A58A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A4DB9ED41FA709A400826A8F /* MTDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4DB9ED71FA709A400826A8F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A4DB9ED81FA709A400826A8F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -71,11 +63,14 @@
 		A4DB9EF71FA709A400826A8F /* MTDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MTDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4DB9EFB1FA709A400826A8F /* MTDemoUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MTDemoUITests.m; sourceTree = "<group>"; };
 		A4DB9EFD1FA709A400826A8F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageThrottle.h; sourceTree = "<group>"; };
-		A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MessageThrottle.m; sourceTree = "<group>"; };
 		A4E7322F226216D8003D7063 /* MessageThrottle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MessageThrottle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4E7323C2262172B003D7063 /* MessageThrottle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MessageThrottle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4E732492262175A003D7063 /* MessageThrottle.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MessageThrottle.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C07087B32E24FF4B000CC96A /* MessageThrottle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageThrottle.h; sourceTree = "<group>"; };
+		C07087B42E24FF4B000CC96A /* MessageThrottle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MessageThrottle.m; sourceTree = "<group>"; };
+		C07087B62E24FF4B000CC96A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C07087BD2E250035000CC96A /* MTEngine+MTArchive.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MTEngine+MTArchive.h"; sourceTree = "<group>"; };
+		C07087BE2E250035000CC96A /* MTEngine+MTArchive.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "MTEngine+MTArchive.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,7 +130,6 @@
 			isa = PBXGroup;
 			children = (
 				A4DB9ED61FA709A400826A8F /* MTDemo */,
-				A4DB9F091FA709EC00826A8F /* MessageThrottle */,
 				A4DB9EEF1FA709A400826A8F /* MTDemoTests */,
 				A4DB9EFA1FA709A400826A8F /* MTDemoUITests */,
 				A4DB9ED51FA709A400826A8F /* Products */,
@@ -172,6 +166,7 @@
 				A4DB9EE21FA709A400826A8F /* LaunchScreen.storyboard */,
 				A4DB9EE51FA709A400826A8F /* Info.plist */,
 				A4DB9EE61FA709A400826A8F /* main.m */,
+				C07087B72E24FF4B000CC96A /* MessageThrottle */,
 			);
 			path = MTDemo;
 			sourceTree = "<group>";
@@ -194,16 +189,34 @@
 			path = MTDemoUITests;
 			sourceTree = "<group>";
 		};
-		A4DB9F091FA709EC00826A8F /* MessageThrottle */ = {
+		C07087B22E24FF4B000CC96A /* MTArchive */ = {
 			isa = PBXGroup;
 			children = (
-				A4DB9F0A1FA709EC00826A8F /* MessageThrottle.h */,
-				A4DB9F0B1FA709EC00826A8F /* MessageThrottle.m */,
-				A48995321FAE2F6200A7A58A /* Info.plist */,
+				C07087BD2E250035000CC96A /* MTEngine+MTArchive.h */,
+				C07087BE2E250035000CC96A /* MTEngine+MTArchive.m */,
+			);
+			path = MTArchive;
+			sourceTree = "<group>";
+		};
+		C07087B52E24FF4B000CC96A /* MTCore */ = {
+			isa = PBXGroup;
+			children = (
+				C07087B32E24FF4B000CC96A /* MessageThrottle.h */,
+				C07087B42E24FF4B000CC96A /* MessageThrottle.m */,
+			);
+			path = MTCore;
+			sourceTree = "<group>";
+		};
+		C07087B72E24FF4B000CC96A /* MessageThrottle */ = {
+			isa = PBXGroup;
+			children = (
+				C07087B22E24FF4B000CC96A /* MTArchive */,
+				C07087B52E24FF4B000CC96A /* MTCore */,
+				C07087B62E24FF4B000CC96A /* Info.plist */,
 			);
 			name = MessageThrottle;
 			path = ../MessageThrottle;
-			sourceTree = "<group>";
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
@@ -212,7 +225,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A489953D1FAE3EC600A7A58A /* MessageThrottle.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,7 +232,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4E7325122621801003D7063 /* MessageThrottle.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,7 +239,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4E7325222621801003D7063 /* MessageThrottle.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,7 +246,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4E7325322621803003D7063 /* MessageThrottle.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -445,6 +454,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C07087B92E24FF4B000CC96A /* Info.plist in Resources */,
 				A4DB9EE41FA709A400826A8F /* LaunchScreen.storyboard in Resources */,
 				A4DB9EE11FA709A400826A8F /* Assets.xcassets in Resources */,
 				A4DB9EDF1FA709A400826A8F /* Main.storyboard in Resources */,
@@ -493,7 +503,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A489953C1FAE2F8400A7A58A /* MessageThrottle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -503,10 +512,11 @@
 			files = (
 				A4092CDF1FAAFB1B00F6935B /* Stub.m in Sources */,
 				A4092CE21FAAFB2F00F6935B /* SuperStub.m in Sources */,
-				A4DB9F0C1FA70A0700826A8F /* MessageThrottle.m in Sources */,
 				A4DB9EDC1FA709A400826A8F /* ViewController.m in Sources */,
+				C07087BF2E250035000CC96A /* MTEngine+MTArchive.m in Sources */,
 				A4DB9EE71FA709A400826A8F /* main.m in Sources */,
 				A4DB9ED91FA709A400826A8F /* AppDelegate.m in Sources */,
+				C07087B82E24FF4B000CC96A /* MessageThrottle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,7 +524,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4DB9F0D1FA70A0700826A8F /* MessageThrottle.m in Sources */,
 				A4371D79210F2A9E00153E3C /* SuperStub.m in Sources */,
 				A4DB9EF11FA709A400826A8F /* MTDemoTests.m in Sources */,
 				A4371D7A210F2AAD00153E3C /* Stub.m in Sources */,
@@ -533,7 +542,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4E732542262188D003D7063 /* MessageThrottle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -541,7 +549,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4E732552262188E003D7063 /* MessageThrottle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -549,7 +556,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A4E732562262188F003D7063 /* MessageThrottle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
