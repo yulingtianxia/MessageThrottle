@@ -278,7 +278,6 @@ static const char * mt_blockMethodSignature(id blockObj) {
 @implementation MTEngine
 
 static pthread_mutex_t mutex;
-NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
 
 + (instancetype)defaultEngine {
     static dispatch_once_t onceToken;

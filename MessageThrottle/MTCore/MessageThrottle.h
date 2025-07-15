@@ -21,8 +21,6 @@ typedef NS_ENUM(NSUInteger, MTPerformMode) {
     MTPerformModeDebounce,
 };
 
-extern NSString *const kMTPersistentRulesKey;
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**

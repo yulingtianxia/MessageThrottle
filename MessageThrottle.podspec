@@ -16,26 +16,22 @@ s.source       = { :git => "https://github.com/yulingtianxia/MessageThrottle.git
 s.subspec 'MTCore' do |ss|
   ss.source_files = 'MessageThrottle/MTCore/*.{h,m}'
   ss.frameworks = 'MTCore'
-  ss.ios.deployment_target = "6.0"
-  ss.osx.deployment_target = "10.8"
-  ss.watchos.deployment_target = "2.0"
-  ss.tvos.deployment_target = "9.0"
-  ss.requires_arc = true
 end
 
 s.subspec 'MTArchive' do |ss|
   ss.source_files = 'MessageThrottle/MTArchive/*.{h,m}'
   ss.frameworks = 'MTArchive'
   ss.dependency 'MTCore'
-  ss.ios.deployment_target = "6.0"
-  ss.osx.deployment_target = "10.8"
-  ss.watchos.deployment_target = "2.0"
-  ss.tvos.deployment_target = "9.0"
-  ss.requires_arc = true
 end
 
+s.ios.deployment_target = "6.0"
+s.osx.deployment_target = "10.8"
+s.watchos.deployment_target = "2.0"
+s.tvos.deployment_target = "9.0"
+s.requires_arc = true
+
 s.default_subspec = 'MTCore', 'MTArchive'
-s.public_header_files = "MessageThrottle/MTCore/MessageThrottle.h"
+s.public_header_files = "MessageThrottle/MessageThrottleHeader.h"
 s.frameworks = 'Foundation'
 
 end

@@ -9,6 +9,8 @@
 #import "MTEngine+MTArchive.h"
 #import "MessageThrottle.h"
 
+NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
+
 @implementation MTEngine (MTArchive)
 
 + (void)load {
