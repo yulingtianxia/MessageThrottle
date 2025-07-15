@@ -15,13 +15,11 @@ s.source       = { :git => "https://github.com/yulingtianxia/MessageThrottle.git
 
 s.subspec 'MTCore' do |ss|
   ss.source_files = 'MessageThrottle/MTCore/*.{h,m}'
-  ss.frameworks = 'MTCore'
 end
 
 s.subspec 'MTArchive' do |ss|
   ss.source_files = 'MessageThrottle/MTArchive/*.{h,m}'
-  ss.frameworks = 'MTArchive'
-  ss.dependency 'MTCore'
+  ss.dependency 'MessageThrottle/MTCore'
 end
 
 s.ios.deployment_target = "6.0"
@@ -35,3 +33,5 @@ s.public_header_files = "MessageThrottle/MessageThrottleHeader.h"
 s.frameworks = 'Foundation'
 
 end
+
+# pod spec lint MessageThrottle.podspec --use-libraries --allow-warnings
