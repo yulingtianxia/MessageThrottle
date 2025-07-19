@@ -34,5 +34,3 @@ s.default_subspec = ['MTCore', 'MTArchive']
 s.frameworks = 'Foundation'
 
 end
-
-# pod spec lint MessageThrottle.podspec --use-libraries --allow-warnings

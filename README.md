@@ -75,6 +75,8 @@ You should call `discard` method When you don't need limit `foo:` method.
 
 **NOTE: `MTRule` is self-managed. If the `target` of rule is a object instance, `MTRule` will discard itself automatically when the `target` is deallocated.**
 
+if you import MTEngine+MTArchive.h header file, you can save rules to disk and load them from disk. that it need you pod subspec MTArchive. but MessageThrottle default import it.
+
 Some rules may have large `durationThreshold`. You can set property `persistent` to `YES`, and save them on disk by calling `savePersistentRules` method. These persistent rules will be applied after `MTEngine` class is loaded. `savePersistentRules` will be called automatically when receive terminate notification.
 
 ```
