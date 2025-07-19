@@ -10,6 +10,7 @@
 #import "SuperStub.h"
 #import "Stub.h"
 #import "MessageThrottle.h"
+#import "MTEngine+MTArchive.h"
 
 @interface MTDemoTests : XCTestCase
 
