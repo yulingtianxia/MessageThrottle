@@ -130,13 +130,6 @@ Class mt_metaClass(Class cls);
  */
 - (BOOL)discardRule:(MTRule *)rule;
 
-/**
- 保存持久化规则
- iOS、macOS 和 tvOS 下杀掉 App 后会自动调用。
- 请在需要保存持久化规则的时候手动调用此方法。
- */
-- (void)savePersistentRules API_AVAILABLE(macosx(10.11));
-
 @end
 
 @interface NSObject (MessageThrottle)

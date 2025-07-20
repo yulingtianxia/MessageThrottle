@@ -12,14 +12,25 @@ s.author       = { "YangXiaoyu" => "yulingtianxia@gmail.com" }
 s.social_media_url = 'https://twitter.com/yulingtianxia'
 s.source       = { :git => "https://github.com/yulingtianxia/MessageThrottle.git", :tag => s.version.to_s }
 
+
+s.subspec 'MTCore' do |ss|
+  ss.source_files = 'MessageThrottle/MTCore/*.{h,m}'
+  ss.public_header_files = "MessageThrottle/MTCore/MessageThrottle.h"
+end
+
+s.subspec 'MTArchive' do |ss|
+  ss.source_files = 'MessageThrottle/MTArchive/*.{h,m}'
+  ss.dependency 'MessageThrottle/MTCore'
+  ss.public_header_files = "MessageThrottle/MTArchive/MTEngine+MTArchive.h"
+end
+
 s.ios.deployment_target = "6.0"
 s.osx.deployment_target = "10.8"
 s.watchos.deployment_target = "2.0"
 s.tvos.deployment_target = "9.0"
 s.requires_arc = true
 
-s.source_files = "MessageThrottle/*.{h,m}"
-s.public_header_files = "MessageThrottle/MessageThrottle.h"
+s.default_subspec = ['MTCore', 'MTArchive']
 s.frameworks = 'Foundation'
 
 end
