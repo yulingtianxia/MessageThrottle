@@ -566,9 +566,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6CMYQQFFT8;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = MTDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MTDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -582,9 +582,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6CMYQQFFT8;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = MTDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MTDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -598,7 +598,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = D3RCVUP6VH;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = MTDemoTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MTDemoTests;
@@ -614,7 +614,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = D3RCVUP6VH;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = MTDemoTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MTDemoTests;
@@ -629,7 +629,7 @@
 			baseConfigurationReference = E0FC28ADCECCCA5B3FD71D03 /* Pods-MTDemo-MTDemoUITests.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = D3RCVUP6VH;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = MTDemoUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MTDemoUITests;
@@ -644,7 +644,7 @@
 			baseConfigurationReference = 664D3DAE5C09C106305D0E6D /* Pods-MTDemo-MTDemoUITests.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = D3RCVUP6VH;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = MTDemoUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yulingtianxia.MTDemoUITests;

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 s.name         = "MessageThrottle"
-s.version      = "1.4.3"
+s.version      = "1.5.0"
 s.summary      = "A lightweight Objective-C message throttle and debounce library."
 s.description  = <<-DESC
 MessageThrottle is a lightweight, simple library for controlling frequency of forwarding Objective-C messages. You can choose to control existing methods per instance or per class. It's an implementation of function throttle/debounce developed with Objective-C runtime. 
@@ -24,10 +24,10 @@ s.subspec 'MTArchive' do |ss|
   ss.public_header_files = "MessageThrottle/MTArchive/MTEngine+MTArchive.h"
 end
 
-s.ios.deployment_target = "6.0"
-s.osx.deployment_target = "10.8"
-s.watchos.deployment_target = "2.0"
-s.tvos.deployment_target = "9.0"
+s.ios.deployment_target = "12.0"
+s.osx.deployment_target = "10.13"
+s.watchos.deployment_target = "4.0"
+s.tvos.deployment_target = "12.0"
 s.requires_arc = true
 
 s.default_subspec = ['MTCore', 'MTArchive']

@@ -17,22 +17,12 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
         NSArray<NSData *> *array = [NSUserDefaults.standardUserDefaults objectForKey:kMTPersistentRulesKey];
         for (NSData *data in array) {
-            if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
-                NSError *error = nil;
-                MTRule *rule = [NSKeyedUnarchiver unarchivedObjectOfClass:MTRule.class fromData:data error:&error];
-                if (error) {
-                    NSLog(@"%@", error.localizedDescription);
-                }
-                else {
-                    [rule apply];
-                }
+            NSError *error = nil;
+            MTRule *rule = [NSKeyedUnarchiver unarchivedObjectOfClass:MTRule.class fromData:data error:&error];
+            if (error) {
+                NSLog(@"%@", error.localizedDescription);
             } else {
-                @try {
-                    MTRule *rule = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-                    [rule apply];
-                } @catch (NSException *exception) {
-                    NSLog(@"%@", exception.description);
-                }
+                [rule apply];
             }
         }
     });
@@ -42,15 +32,10 @@ NSString * const kMTPersistentRulesKey = @"kMTPersistentRulesKey";
     NSMutableArray<NSData *> *array = [NSMutableArray array];
     for (MTRule *rule in self.allRules) {
         if (rule.isPersistent) {
-            NSData *data;
-            if (@available(iOS 11.0, macOS 10.13, tvOS 11.0, watchOS 4.0, *)) {
-                NSError *error = nil;
-                data = [NSKeyedArchiver archivedDataWithRootObject:rule requiringSecureCoding:YES error:&error];
-                if (error) {
-                    NSLog(@"%@", error.localizedDescription);
-                }
-            } else {
-                data = [NSKeyedArchiver archivedDataWithRootObject:rule];
+            NSError *error = nil;
+            NSData *data = [NSKeyedArchiver archivedDataWithRootObject:rule requiringSecureCoding:YES error:&error];
+            if (error) {
+                NSLog(@"%@", error.localizedDescription);
             }
             if (data) {
                 [array addObject:data];

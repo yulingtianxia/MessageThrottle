@@ -1,7 +1,7 @@
 PODS:
-  - MessageThrottle/MTArchive (1.4.3):
+  - MessageThrottle/MTArchive (1.5.0):
     - MessageThrottle/MTCore
-  - MessageThrottle/MTCore (1.4.3)
+  - MessageThrottle/MTCore (1.5.0)
 
 DEPENDENCIES:
   - MessageThrottle/MTArchive (from `../`)
@@ -12,8 +12,8 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  MessageThrottle: 0f7ff57145ead2fc705396e67685f18045ed2e8f
+  MessageThrottle: 8e029c043c626037cd9e298e0a98c826cac0c9c1
 
-PODFILE CHECKSUM: d15d857ee528045ab4955010eca75a4d7af7326e
+PODFILE CHECKSUM: 084e226a0ceda83fe511fada92fb9fb654bd1088
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.16.2
